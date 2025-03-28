@@ -39,10 +39,10 @@ class PrintController extends Controller
             $printer->text(trim(mb_convert_encoding($output, "UTF-8", "auto")));
             $printer->close();
         } catch (Exception $e) {
-            echo "No se pudo imprimir: " . $e->getMessage();
+            echo 'No se pudo imprimir: ' . $e->getMessage();
         }
         return response()->json([
-            'Respuesta' =>  trim(mb_convert_encoding($output, "UTF-8", "auto"))
+            'Respuesta' => trim(mb_convert_encoding($output, "UTF-8", "auto"))
 
         ]);
     }
