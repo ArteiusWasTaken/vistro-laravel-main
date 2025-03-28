@@ -1,7 +1,8 @@
 <?php
 
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Facades\Artisan;
 
-use App\Console\Commands\KeepPrinterAlive;
-use Illuminate\Support\Facades\Schedule;
-
-Schedule::command('printer:keep-alive')->everyThirtySeconds();
+Artisan::command('inspire', function () {
+    $this->comment(Inspiring::quote());
+})->purpose('Display an inspiring quote')->hourly();
