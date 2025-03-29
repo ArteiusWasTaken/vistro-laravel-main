@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
-use Mike42\Escpos\Printer;
 
 /**
  *
@@ -41,13 +39,9 @@ class PrintController extends Controller
                 escapeshellarg('1') . ' 2>&1';
 
             $output = shell_exec($command);
-
-
-//            $output = '^XA^FO50,50^FDHello^FS^XZ';
-
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
-                throw new \Exception("No se pudo conectar a la impresora: $errstr ($errno)");
+                throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
             }
 
             fwrite($socket, trim(mb_convert_encoding($output, 'UTF-8', 'auto')));
@@ -56,7 +50,7 @@ class PrintController extends Controller
             return response()->json([
                 'Respuesta' => 'Enviado correctamente'
             ]);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return response()->json([
                 'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
             ], 500);
