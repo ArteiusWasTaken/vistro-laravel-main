@@ -33,24 +33,32 @@ class PrintController extends Controller
 //                escapeshellarg("") . " 2>&1";
 //
 //            $output = shell_exec($command);
-            $command = 'python3 python/label/2x1/description.py ' .
-                escapeshellarg('Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre') . ' ' .
-                escapeshellarg('1') . ' 2>&1';
+//            $command = 'python python/label/2x1/description.py ' .
+//                escapeshellarg('Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre') . ' ' .
+//                escapeshellarg('1') . ' 2>&1';
+//
+//            $output = shell_exec($command);
 
-            $output = shell_exec($command);
+            $ip = '192.168.100.7';
+            $port = 9100;
+            $output = '^XA^FO50,50^FDHello^FS^XZ';
 
-            $connector = new NetworkPrintConnector('192.168.100.7', 9100);
-            $printer = new Printer($connector);
+            $socket = fsockopen($ip, $port, $errno, $errstr, 5);
+            if (!$socket) {
+                throw new \Exception("No se pudo conectar a la impresora: $errstr ($errno)");
+            }
 
-            $printer->text(trim(mb_convert_encoding($output, 'UTF-8', 'auto')));
-            $printer->close();
-        } catch (Exception $exception) {
-            echo 'No se pudo imprimir: ' . $exception->getMessage();
+            fwrite($socket, $output);
+            fclose($socket);
+
+            return response()->json([
+                'Respuesta' => 'Enviado correctamente'
+            ]);
+        } catch (\Exception $exception) {
+            return response()->json([
+                'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
+            ], 500);
         }
-        return response()->json([
-            'Respuesta' => trim(mb_convert_encoding($output, 'UTF-8', 'auto'))
-
-        ]);
     }
 
 }
