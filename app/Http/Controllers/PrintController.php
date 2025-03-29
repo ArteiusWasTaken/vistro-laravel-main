@@ -18,6 +18,9 @@ class PrintController extends Controller
     public function index(): JsonResponse
     {
         try {
+            $ip = '192.168.100.7';
+            $port = 9100;
+
 //            $command = 'python python/label/2x1/sku_description.py ' .
 //                escapeshellarg('FDMVVS69495') . ' ' .
 //                escapeshellarg('Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre') . ' ' .
@@ -33,22 +36,21 @@ class PrintController extends Controller
 //                escapeshellarg("") . " 2>&1";
 //
 //            $output = shell_exec($command);
-//            $command = 'python python/label/2x1/description.py ' .
-//                escapeshellarg('Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre') . ' ' .
-//                escapeshellarg('1') . ' 2>&1';
-//
-//            $output = shell_exec($command);
+            $command = 'python python/label/2x1/description.py ' .
+                escapeshellarg('Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre') . ' ' .
+                escapeshellarg('1') . ' 2>&1';
 
-            $ip = '192.168.100.7';
-            $port = 9100;
-            $output = '^XA^FO50,50^FDHello^FS^XZ';
+            $output = shell_exec($command);
+
+
+//            $output = '^XA^FO50,50^FDHello^FS^XZ';
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
                 throw new \Exception("No se pudo conectar a la impresora: $errstr ($errno)");
             }
 
-            fwrite($socket, $output);
+            fwrite($socket, trim(mb_convert_encoding($output, 'UTF-8', 'auto')));
             fclose($socket);
 
             return response()->json([
