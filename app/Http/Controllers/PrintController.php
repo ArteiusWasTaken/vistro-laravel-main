@@ -32,6 +32,7 @@ class PrintController extends Controller
 //                escapeshellarg('1') . ' 2>&1';
 //
 //            $output = shell_exec($command);
+
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
                 throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
