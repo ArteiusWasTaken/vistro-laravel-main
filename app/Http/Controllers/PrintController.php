@@ -16,7 +16,7 @@ class PrintController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $ip = '192.168.100.7';
+            $ip = '172.16.200.63';
             $port = 9100;
 
             $command = 'python python/label/2x1/description.py ' .
@@ -48,7 +48,7 @@ class PrintController extends Controller
     public function keepAlive(): void
     {
         try {
-            $ip = '192.168.100.7';
+            $ip = '172.16.200.63';
             $port = 9100;
 
             $output = '^XA^XZ';
