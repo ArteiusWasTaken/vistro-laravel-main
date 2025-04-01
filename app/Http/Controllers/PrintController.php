@@ -16,7 +16,7 @@ class PrintController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $ip = '172.16.200.63';
+            $ip = '192.168.15.72';
             $port = 9100;
 
             $output = '^XA^CI28^LH0,0^FO25,15^BY2,,0^BCN,55,N,N^FDMVVS69495^FS^FT110,98^A0N,22,22^FH^FDMVVS69495^FS^FT109,98^A0N,22,22^FH^FDMVVS69495^FS^FO22,115^A0N,18,18^FB300,2,0,L^FH^FDPerfume Versace Eros Eau De Toilette 100 Ml Para Hombre^FS^FO22,153^A0N,18,18^FB300,1,0,L^FH^FD^FS^FO21,153^A0N,18,18^FB300,1,0,L^FH^FD^FS^FO22,175^A0N,18,18^FH^FDCod. Universal: 8011003809219^FS^FO22,175^A0N,18,18^FH^FD^FS^PQ1,0,1,Y^XZ';
@@ -45,10 +45,10 @@ class PrintController extends Controller
     public function keepAlive(): void
     {
         try {
-            $ip = '172.16.200.63';
+            $ip = '192.168.15.72';
             $port = 9100;
 
-            $output = '^XA^XZ';
+            $output = '^XA^CI28^LH0,0^FO25,15^BY2,,0^BCN,55,N,N^FDMVVS69495^FS^FT110,98^A0N,22,22^FH^FDMVVS69495^FS^FT109,98^A0N,22,22^FH^FDMVVS69495^FS^FO22,115^A0N,18,18^FB300,2,0,L^FH^FDPerfume Versace Eros Eau De Toilette 100 Ml Para Hombre^FS^FO22,153^A0N,18,18^FB300,1,0,L^FH^FD^FS^FO21,153^A0N,18,18^FB300,1,0,L^FH^FD^FS^FO22,175^A0N,18,18^FH^FDCod. Universal: 8011003809219^FS^FO22,175^A0N,18,18^FH^FD^FS^PQ1,0,1,Y^XZ';
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
 
             if (!$socket) {
