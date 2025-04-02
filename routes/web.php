@@ -13,7 +13,10 @@ Route::prefix('dev')->group(function () {
 });
 
 Route::middleware([JwtMiddleware::class])->group(function () {
-    Route::prefix('impresoras')->group(function () {
-        Route::get('/', [PrintController::class, 'index']);
+    Route::prefix('etiquetas')->group(function () {
+        Route::get('/', [PrintController::class, 'etiquetas']);
+    });
+    Route::prefix('tickets')->group(function () {
+        Route::get('/', [PrintController::class, 'tickets']);
     });
 });
