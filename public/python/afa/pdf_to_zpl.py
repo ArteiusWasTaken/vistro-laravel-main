@@ -1,15 +1,28 @@
 import os
 import sys
-from zebrafy import ZebrafyPDF, ZebrafyZPL
+from zebrafy import ZebrafyPDF
 
 def convert_pdf_to_zpl(pdf_path):
-    with open(pdf_path, "rb") as f:
-        pdf_bytes = f.read()
+    with open(pdf_path, "rb") as pdf:
+        zpl_string = ZebrafyPDF(
+            pdf.read(),
+            format="Z64",
+            invert=True,
+            dither=False,
+            threshold=128,
+            dpi=203,
+            width=406,
+            height=203,
+            pos_x=100,
+            pos_y=100,
+            rotation=90,
+            string_line_break=80,
+            complete_zpl=True,
+            split_pages=True,
+        ).to_zpl()
 
-    pdf = ZebrafyPDF(pdf_bytes)
-    images = pdf.to_images()  # CORRECTO: este es el método válido
-    zpl = ZebrafyZPL(images[0])  # Puedes hacer un for si quieres todas las páginas
-    return zpl.to_zpl()
+    with open("output.zpl", "w") as zpl:
+        zpl.write(zpl_string)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
