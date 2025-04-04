@@ -21,7 +21,7 @@ class PrintController extends Controller
 
 //            $output = '^XA ZPL & PDF ^XZ';
             $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('img/test/label.pdf') . ' 2>&1';
-            $output = shell_exec($command);
+            $output = trim(trim(shell_exec($command)));
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
@@ -44,7 +44,7 @@ class PrintController extends Controller
 
 //            $output = '^XA ZPL & PDF ^XZ';
             $command = 'python3 python/afa/img_to_zpl.py ' . escapeshellarg('img/test/omg.png') . ' 2>&1';
-            $output2 = shell_exec($command);
+            $output2 = trim(shell_exec($command));
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
@@ -64,7 +64,7 @@ class PrintController extends Controller
             'Respuesta' => 'Enviado correctamente',
             'data' => $output,
             'data2' => $output2
-            ]);
+        ]);
     }
 
     /**
@@ -78,7 +78,7 @@ class PrintController extends Controller
 
 //            $output = '^XA ZPL & PDF ^XZ';
             $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('img/test/label.pdf') . ' 2>&1';
-            $output = shell_exec($command);
+            $output = trim(shell_exec($command));
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
@@ -101,7 +101,7 @@ class PrintController extends Controller
 
 //            $output = '^XA ZPL & PDF ^XZ';
             $command = 'python3 python/afa/img_to_zpl.py ' . escapeshellarg('img/test/omg.png') . ' 2>&1';
-            $output2 = shell_exec($command);
+            $output2 = trim(shell_exec($command));
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
@@ -147,11 +147,11 @@ class PrintController extends Controller
     }
 }
 
-$command = 'python python/label/2x1/description.py ' .
-    escapeshellarg('Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre') . ' ' .
-    escapeshellarg('1') . ' 2>&1';
-
-$output = shell_exec($command);
+//$command = 'python python/label/2x1/description.py ' .
+//    escapeshellarg('Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre') . ' ' .
+//    escapeshellarg('1') . ' 2>&1';
+//
+//$output = trim(shell_exec($command));
 
 //            $command = 'python python/label/2x1/sku_description.py ' .
 //                escapeshellarg('FDMVVS69495') . ' ' .
@@ -159,7 +159,7 @@ $output = shell_exec($command);
 //                escapeshellarg('1') . ' ' .
 //                escapeshellarg('Cod. Universal: 8011003809219') . ' 2>&1';
 //
-//            $output = shell_exec($command);
+//            $output = trim(shell_exec($command));
 
 //            $command = "python python/label/2x1/sku_description_serie.py " .
 //                escapeshellarg("FDMVVS69495") . " " .
@@ -168,4 +168,4 @@ $output = shell_exec($command);
 //                escapeshellarg("1") . " " .
 //                escapeshellarg("") . " 2>&1";
 //
-//            $output = shell_exec($command);
+//            $output = trim(shell_exec($command));
