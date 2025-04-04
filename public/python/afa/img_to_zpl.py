@@ -10,4 +10,4 @@ def convert_image_to_zpl(image_path):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Uso: python img_to_zpl.py <imagen>")
-        sys.exit(
+        sys.exit(1)

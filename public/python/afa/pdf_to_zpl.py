@@ -1,7 +1,10 @@
 from zebrafy import ZebrafyPDF, ZebrafyZPL
 
 def convert_pdf_to_zpl(pdf_path):
-    pdf = ZebrafyPDF(pdf_path)
+    with open(pdf_path, "rb") as f:
+        pdf_bytes = f.read()
+
+    pdf = ZebrafyPDF(pdf_bytes)
     images = pdf.convert()
     zpl = ZebrafyZPL(images[0])
     return zpl.to_zpl()
