@@ -7,18 +7,17 @@ def convert_pdf_to_zpl(pdf_path):
         pdf_bytes = f.read()
 
     pdf = ZebrafyPDF(pdf_bytes)
-    images = pdf.convert()
-
-    zpl = ZebrafyZPL(images[0])
+    images = pdf.to_images()  # CORRECTO: este es el método válido
+    zpl = ZebrafyZPL(images[0])  # Puedes hacer un for si quieres todas las páginas
     return zpl.to_zpl()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        sys.exit("Uso: python pdf_to_zpl.py <archivo.pdf>")
+        sys.exit("Uso: python pdf_to_zpl.py <ruta/relativa/al/pdf>")
 
     relative_path = sys.argv[1]
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    pdf_file = os.path.abspath(os.path.join(script_dir, "..", "..", relative_path))
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    pdf_file = os.path.abspath(os.path.join(project_root, relative_path))
 
     if not os.path.exists(pdf_file):
         sys.exit(f"Archivo no encontrado: {pdf_file}")
