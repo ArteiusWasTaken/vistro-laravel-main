@@ -20,7 +20,7 @@ class PrintController extends Controller
             $port = 9100;
 
 //            $output = '^XA ZPL & PDF ^XZ';
-            $command = 'python3 python/pdf_to_zpl.py ' . escapeshellarg('public/img/test/label.pdf') . ' 2>&1';
+            $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('public/img/test/label.pdf') . ' 2>&1';
             $output = shell_exec($command);
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
@@ -43,7 +43,7 @@ class PrintController extends Controller
             $port = 9100;
 
 //            $output = '^XA ZPL & PDF ^XZ';
-            $command = 'python3 python/img_to_zpl.py ' . escapeshellarg('public/img/test/omg.png') . ' 2>&1';
+            $command = 'python3 python/afa/img_to_zpl.py ' . escapeshellarg('public/img/test/omg.png') . ' 2>&1';
             $output2 = shell_exec($command);
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
@@ -77,7 +77,7 @@ class PrintController extends Controller
             $port = 9100;
 
 //            $output = '^XA ZPL & PDF ^XZ';
-            $command = 'python3 python/pdf_to_zpl.py ' . escapeshellarg('public/img/test/label.pdf') . ' 2>&1';
+            $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('public/img/test/label.pdf') . ' 2>&1';
             $output = shell_exec($command);
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
@@ -100,7 +100,7 @@ class PrintController extends Controller
             $port = 9100;
 
 //            $output = '^XA ZPL & PDF ^XZ';
-            $command = 'python3 python/img_to_zpl.py ' . escapeshellarg('public/img/test/omg.png') . ' 2>&1';
+            $command = 'python3 python/afa/img_to_zpl.py ' . escapeshellarg('public/img/test/omg.png') . ' 2>&1';
             $output2 = shell_exec($command);
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
