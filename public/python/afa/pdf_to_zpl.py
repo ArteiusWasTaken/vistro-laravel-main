@@ -21,10 +21,8 @@ def convert_pdf_to_zpl(pdf_path):
             split_pages=True,
         ).to_zpl()
 
-    with open("output.zpl", "w") as zpl:
-        zpl.write(zpl_string)
-
-    print(zpl)
+    # Retorna el código ZPL
+    return zpl_string
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -37,4 +35,6 @@ if __name__ == "__main__":
     if not os.path.exists(pdf_file):
         sys.exit(f"Archivo no encontrado: {pdf_file}")
 
-    print(convert_pdf_to_zpl(pdf_file))
+    # Llama a la función y luego imprime el resultado
+    zpl_code = convert_pdf_to_zpl(pdf_file)
+    print(zpl_code)
