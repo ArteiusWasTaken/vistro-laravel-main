@@ -7,7 +7,7 @@ def convert_pdf_to_zpl(pdf_path, label_width=406, label_height=203, dpi=203, inv
         zpl_string = ZebrafyPDF(
             pdf.read(),
             format="Z64",            # Formato Z64
-            invert=invert,           # No invertir colores
+            invert=True,           # No invertir colores
             dither=False,            # Desactivar dithering
             threshold=128,           # Umbral de color
             dpi=dpi,                 # DPI a 203 (para etiquetas térmicas)
@@ -41,5 +41,5 @@ if __name__ == "__main__":
         sys.exit(f"Archivo no encontrado: {pdf_file}")
 
     # Llama a la función y luego imprime el resultado
-    zpl_code = convert_pdf_to_zpl(pdf_file, label_width=406, label_height=203, invert=False)  # Invertir colores en False
+    zpl_code = convert_pdf_to_zpl(pdf_file, label_width=406, label_height=203, invert=False)
     print(zpl_code)
