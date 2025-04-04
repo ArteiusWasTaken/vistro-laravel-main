@@ -24,6 +24,8 @@ def convert_pdf_to_zpl(pdf_path):
     with open("output.zpl", "w") as zpl:
         zpl.write(zpl_string)
 
+    print(zpl_code)
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit("Uso: python pdf_to_zpl.py <ruta/relativa/al/pdf>")
