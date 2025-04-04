@@ -40,4 +40,4 @@ if __name__ == "__main__":
         sys.exit(f"Archivo no encontrado: {pdf_file}")
 
     zpl_code = convert_pdf_to_zpl(pdf_file, label_width=406, label_height=203, invert=True)
-    print(final_code)
+    print(zpl_code)

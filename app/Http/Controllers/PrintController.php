@@ -76,9 +76,9 @@ class PrintController extends Controller
             $ip = '192.168.15.73';
             $port = 9100;
 
-//            $output = '^XA ZPL & PDF ^XZ';
+//            $output = '^XA Picking TD ^XZ';
             $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('img/test/label.pdf') . ' 2>&1';
-            $output = trim(shell_exec($command));
+            $output = trim(trim(shell_exec($command)));
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
@@ -99,7 +99,7 @@ class PrintController extends Controller
             $ip = '192.168.15.73';
             $port = 9100;
 
-//            $output = '^XA ZPL & PDF ^XZ';
+//            $output = '^XA Picking TD ^XZ';
             $command = 'python3 python/afa/img_to_zpl.py ' . escapeshellarg('img/test/omg.png') . ' 2>&1';
             $output2 = trim(shell_exec($command));
 
@@ -121,7 +121,7 @@ class PrintController extends Controller
             'Respuesta' => 'Enviado correctamente',
             'data' => $output,
             'data2' => $output2
-            ,]);
+        ]);
     }
 
     /**
