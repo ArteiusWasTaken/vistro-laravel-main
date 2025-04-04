@@ -50,4 +50,4 @@ if __name__ == "__main__":
         sys.exit(f"Archivo no encontrado: {img_file}")
 
     zpl_code = convert_image_to_zpl(img_file, label_width=406, label_height=203, dpi=203, invert=False)
-    print(final_code)
+    print(zpl_code)
