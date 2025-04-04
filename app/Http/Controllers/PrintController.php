@@ -44,14 +44,14 @@ class PrintController extends Controller
 
 //            $output = '^XA ZPL & PDF ^XZ';
             $command = 'python3 python/img_to_zpl.py ' . escapeshellarg('public/img/test/omg.png') . ' 2>&1';
-            $output = shell_exec($command);
+            $output2 = shell_exec($command);
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
                 throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
             }
 
-            fwrite($socket, $output);
+            fwrite($socket, $output2);
             fclose($socket);
 
         } catch (Exception $exception) {
@@ -61,8 +61,10 @@ class PrintController extends Controller
         }
 
         return response()->json([
-            'Respuesta' => 'Enviado correctamente'
-        ]);
+            'Respuesta' => 'Enviado correctamente',
+            'data' => $output,
+            'data2' => $output2
+            ]);
     }
 
     /**
@@ -99,14 +101,14 @@ class PrintController extends Controller
 
 //            $output = '^XA ZPL & PDF ^XZ';
             $command = 'python3 python/img_to_zpl.py ' . escapeshellarg('public/img/test/omg.png') . ' 2>&1';
-            $output = shell_exec($command);
+            $output2 = shell_exec($command);
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
                 throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
             }
 
-            fwrite($socket, $output);
+            fwrite($socket, $output2);
             fclose($socket);
 
         } catch (Exception $exception) {
@@ -116,8 +118,10 @@ class PrintController extends Controller
         }
 
         return response()->json([
-            'Respuesta' => 'Enviado correctamente'
-        ]);
+            'Respuesta' => 'Enviado correctamente',
+            'data' => $output,
+            'data2' => $output2
+            ,]);
     }
 
     /**
