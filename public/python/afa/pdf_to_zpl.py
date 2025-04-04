@@ -3,7 +3,7 @@ import sys
 from zebrafy import ZebrafyPDF
 
 def convert_pdf_to_zpl(pdf_path):
-    with open("source.pdf", "rb") as pdf:
+    with open(pdf_path, "rb") as pdf:
         zpl_string = ZebrafyPDF(pdf.read()).to_zpl()
 
     # Eliminar saltos de línea innecesarios
