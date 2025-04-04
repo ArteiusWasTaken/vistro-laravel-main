@@ -3,23 +3,8 @@ import sys
 from zebrafy import ZebrafyPDF
 
 def convert_pdf_to_zpl(pdf_path):
-    with open(pdf_path, "rb") as pdf:
-        zpl_string = ZebrafyPDF(
-            pdf.read(),
-            format="Z64",
-            invert=True,
-            dither=False,
-            threshold=128,
-            dpi=203,
-            width=406,
-            height=203,
-            pos_x=100,
-            pos_y=100,
-            rotation=90,
-            string_line_break=80,
-            complete_zpl=True,
-            split_pages=True,
-        ).to_zpl()
+    with open("source.pdf", "rb") as pdf:
+        zpl_string = ZebrafyPDF(pdf.read()).to_zpl()
 
     # Eliminar saltos de línea innecesarios
     zpl_string = zpl_string.replace('\n', '')
