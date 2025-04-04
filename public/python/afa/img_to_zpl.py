@@ -3,7 +3,7 @@ import os
 from zebrafy import ZebrafyImage
 from PIL import Image
 
-def convert_image_to_zpl(image_path, label_width=406, label_height=203, invert=True):
+def convert_image_to_zpl(image_path, label_width=406, label_height=203, invert=False):
     with open(image_path, "rb") as image:
         zpl_string = ZebrafyImage(
             image.read(),
@@ -15,7 +15,7 @@ def convert_image_to_zpl(image_path, label_width=406, label_height=203, invert=T
             height=label_height,
             pos_x=100,
             pos_y=100,
-            rotation=90,
+            rotation=0,
             string_line_break=80,
             complete_zpl=True,
         ).to_zpl()
@@ -38,5 +38,5 @@ if __name__ == "__main__":
     if not os.path.exists(img_file):
         sys.exit(f"Archivo no encontrado: {img_file}")
 
-    zpl_code = convert_image_to_zpl(img_file, label_width=406, label_height=203, invert=True)
+    zpl_code = convert_image_to_zpl(img_file, label_width=406, label_height=203, invert=False)
     print(zpl_code)
