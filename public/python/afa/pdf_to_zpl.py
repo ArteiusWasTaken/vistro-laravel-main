@@ -1,15 +1,16 @@
-import sys
-from zebrafy.zebrafy_zpl import ZebrafyZPL
-from zebrafy.utils import pdf_to_image
+from zebrafy import ZebrafyPDF, ZebrafyZPL
 
 def convert_pdf_to_zpl(pdf_path):
-    images = pdf_to_image(pdf_path)
-    zpl_labels = [ZPLLabel.from_image(image) for image in images]
-    return "\n".join(label.to_zpl() for label in zpl_labels)
+    pdf = ZebrafyPDF(pdf_path)
+    images = pdf.convert()
+    zpl = ZebrafyZPL(images[0])
+    return zpl.to_zpl()
 
 if __name__ == "__main__":
+    import sys
+
     if len(sys.argv) < 2:
-        print("Uso: python pdf_to_zpl.py")
+        print("Uso: python pdf_to_zpl.py archivo.pdf")
         sys.exit(1)
 
     pdf_file = sys.argv[1]
