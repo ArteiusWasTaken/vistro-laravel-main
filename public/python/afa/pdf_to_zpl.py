@@ -2,7 +2,7 @@ import os
 import sys
 from zebrafy import ZebrafyPDF
 
-def convert_pdf_to_zpl(pdf_path, label_width=406, label_height=203, dpi=203, invert=False):
+def convert_pdf_to_zpl(pdf_path, label_width=406, label_height=203, dpi=203, invert=True):
     with open(pdf_path, "rb") as pdf:
         zpl_string = ZebrafyPDF(
             pdf.read(),
