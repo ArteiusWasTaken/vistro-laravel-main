@@ -23,9 +23,10 @@ def convert_pdf_to_zpl(pdf_path, label_width=406, label_height=203, dpi=203, inv
 
    with open("output.zpl", "w") as zpl:
        zpl.write(zpl_string)
-    zpl_string = zpl_string.replace('\n', '')
 
-    return zpl_string
+   zpl_string = zpl_string.replace('\n', '')
+
+   return zpl_string
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
