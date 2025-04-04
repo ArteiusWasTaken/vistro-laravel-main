@@ -21,6 +21,9 @@ def convert_pdf_to_zpl(pdf_path):
             split_pages=True,
         ).to_zpl()
 
+    # Eliminar saltos de línea innecesarios
+    zpl_string = zpl_string.replace('\n', '')
+
     # Retorna el código ZPL
     return zpl_string
 
@@ -36,5 +39,4 @@ if __name__ == "__main__":
         sys.exit(f"Archivo no encontrado: {pdf_file}")
 
     # Llama a la función y luego imprime el resultado
-    zpl_code = convert_pdf_to_zpl(pdf_file)
-    print(zpl_code)
+    zpl_code =_
