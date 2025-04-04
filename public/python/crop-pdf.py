@@ -54,7 +54,7 @@ def cortar_pdf(input_path):
         # Éxito
         resultado.update({
             "success": True,
-            "message": "PDF cortado verticalmente (mitad izquierda).",
+            "message": "PDF cortado para impresión termica",
             "output_path": output_path
         })
 
