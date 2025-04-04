@@ -3,7 +3,7 @@ import os
 from zebrafy import ZebrafyImage  # Asegúrate de que esta sea la clase correcta
 from PIL import Image
 
-def convert_image_to_zpl(image_path, label_width=406, label_height=203, dpi=203, invert=True):
+def convert_image_to_zpl(image_path, label_width=406, label_height=203, invert=True):
     with open(image_path, "rb") as image:
         zpl_string = ZebrafyImage(
             image.read(),
@@ -11,8 +11,7 @@ def convert_image_to_zpl(image_path, label_width=406, label_height=203, dpi=203,
             invert=invert,           # Invertir colores
             dither=False,            # Desactivar dithering
             threshold=128,           # Umbral de color
-            dpi=dpi,                 # DPI a 203 (para etiquetas térmicas)
-            width=label_width,       # Ancho de la etiqueta en puntos (2 pulgadas)
+}            width=label_width,       # Ancho de la etiqueta en puntos (2 pulgadas)
             height=label_height,     # Alto de la etiqueta en puntos (1 pulgada)
             pos_x=100,               # Posición en X (ajustar según necesidad)
             pos_y=100,               # Posición en Y (ajustar según necesidad)
