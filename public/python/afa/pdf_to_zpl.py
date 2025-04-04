@@ -24,7 +24,7 @@ def convert_pdf_to_zpl(pdf_path):
     with open("output.zpl", "w") as zpl:
         zpl.write(zpl_string)
 
-    print(zpl_code)
+    print(zpl)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
