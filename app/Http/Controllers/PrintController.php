@@ -19,9 +19,10 @@ class PrintController extends Controller
             $ip = '192.168.15.72';
             $port = 9100;
 
-//            $output = '^XA^CI28^LH0,0^FO25,15^BY2,,0^BCN,55,N,N^FDMVVS69495^FS^FT110,98^A0N,22,22^FH^FDMVVS69495^FS^FT109,98^A0N,22,22^FH^FDMVVS69495^FS^FO22,115^A0N,18,18^FB300,2,0,L^FH^FDPerfume Versace Eros Eau De Toilette 100 Ml Para Hombre^FS^FO22,153^A0N,18,18^FB300,1,0,L^FH^FD^FS^FO21,153^A0N,18,18^FB300,1,0,L^FH^FD^FS^FO22,175^A0N,18,18^FH^FDCod. Universal: 8011003809219^FS^FO22,175^A0N,18,18^FH^FD^FS^PQ1,0,1,Y^XZ';
-//            $output = '^XA^FX Top section with logo, name and address.^CF0,60^FO100,50^FDEtiqueta^FS^CF0,30^XZ';
-            $output = '^XA^CI28^LH0,0^FO25,15^BY3,,0^BCN,80,N,N^FDMVVS69495^FS^FT110,130^A0N,33,33^FH^FDMVVS69495^FS^FT109,130^A0N,33,33^FH^FDMVVS69495^FS^FO22,160^A0N,27,27^FB450,2,0,L^FH^FDPerfume Versace Eros Eau De Toilette 100 Ml Para Hombre^FS^FO22,200^A0N,27,27^FB450,1,0,L^FH^FD^FS^FO21,200^A0N,27,27^FB450,1,0,L^FH^FD^FS^FO22,230^A0N,27,27^FH^FDCod. Universal: 8011003809219^FS^FO22,230^A0N,27,27^FH^FD^FS^PQ1,0,1,Y^XZ';
+//            $output = '^XA ZPL & PDF ^XZ';
+            $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('img/test/label.pdf') . ' 2>&1';
+            $output = trim(trim(shell_exec($command)));
+
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
                 throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
@@ -30,14 +31,40 @@ class PrintController extends Controller
             fwrite($socket, $output);
             fclose($socket);
 
-            return response()->json([
-                'Respuesta' => 'Enviado correctamente'
-            ]);
         } catch (Exception $exception) {
             return response()->json([
                 'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
             ], 500);
         }
+
+
+        try {
+            $ip = '192.168.15.72';
+            $port = 9100;
+
+//            $output = '^XA ZPL & PDF ^XZ';
+            $command = 'python3 python/afa/img_to_zpl.py ' . escapeshellarg('img/test/omg.png') . ' 2>&1';
+            $output2 = trim(shell_exec($command));
+
+            $socket = fsockopen($ip, $port, $errno, $errstr, 5);
+            if (!$socket) {
+                throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
+            }
+
+            fwrite($socket, $output2);
+            fclose($socket);
+
+        } catch (Exception $exception) {
+            return response()->json([
+                'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
+            ], 500);
+        }
+
+        return response()->json([
+            'Respuesta' => 'Enviado correctamente',
+            'data' => $output,
+            'data2' => $output2
+        ]);
     }
 
     /**
@@ -49,9 +76,9 @@ class PrintController extends Controller
             $ip = '192.168.15.73';
             $port = 9100;
 
-//            $output = '^XA^CI28^LH0,0^FO25,15^BY2,,0^BCN,55,N,N^FDMVVS69495^FS^FT110,98^A0N,22,22^FH^FDMVVS69495^FS^FT109,98^A0N,22,22^FH^FDMVVS69495^FS^FO22,115^A0N,18,18^FB300,2,0,L^FH^FDPerfume Versace Eros Eau De Toilette 100 Ml Para Hombre^FS^FO22,153^A0N,18,18^FB300,1,0,L^FH^FD^FS^FO21,153^A0N,18,18^FB300,1,0,L^FH^FD^FS^FO22,175^A0N,18,18^FH^FDCod. Universal: 8011003809219^FS^FO22,175^A0N,18,18^FH^FD^FS^PQ1,0,1,Y^XZ';
-//            $output = '^XA^FX Top section with logo, name and address.^CF0,60^FO100,50^FDTicket^FS^CF0,30^XZ';
-            $output = '^XA^CI28^LH0,0^FO25,15^BY3,,0^BCN,80,N,N^FDMVVS69495^FS^FT110,130^A0N,33,33^FH^FDMVVS69495^FS^FT109,130^A0N,33,33^FH^FDMVVS69495^FS^FO22,160^A0N,27,27^FB450,2,0,L^FH^FDPerfume Versace Eros Eau De Toilette 100 Ml Para Hombre^FS^FO22,200^A0N,27,27^FB450,1,0,L^FH^FD^FS^FO21,200^A0N,27,27^FB450,1,0,L^FH^FD^FS^FO22,230^A0N,27,27^FH^FDCod. Universal: 8011003809219^FS^FO22,230^A0N,27,27^FH^FD^FS^PQ1,0,1,Y^XZ';
+//            $output = '^XA Picking TD ^XZ';
+            $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('img/test/label.pdf') . ' 2>&1';
+            $output = trim(trim(shell_exec($command)));
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
@@ -61,14 +88,40 @@ class PrintController extends Controller
             fwrite($socket, $output);
             fclose($socket);
 
-            return response()->json([
-                'Respuesta' => 'Enviado correctamente'
-            ]);
         } catch (Exception $exception) {
             return response()->json([
                 'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
             ], 500);
         }
+
+
+        try {
+            $ip = '192.168.15.73';
+            $port = 9100;
+
+//            $output = '^XA Picking TD ^XZ';
+            $command = 'python3 python/afa/img_to_zpl.py ' . escapeshellarg('img/test/omg.png') . ' 2>&1';
+            $output2 = trim(shell_exec($command));
+
+            $socket = fsockopen($ip, $port, $errno, $errstr, 5);
+            if (!$socket) {
+                throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
+            }
+
+            fwrite($socket, $output2);
+            fclose($socket);
+
+        } catch (Exception $exception) {
+            return response()->json([
+                'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
+            ], 500);
+        }
+
+        return response()->json([
+            'Respuesta' => 'Enviado correctamente',
+            'data' => $output,
+            'data2' => $output2
+        ]);
     }
 
     /**
@@ -98,7 +151,7 @@ class PrintController extends Controller
 //    escapeshellarg('Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre') . ' ' .
 //    escapeshellarg('1') . ' 2>&1';
 //
-//$output = shell_exec($command);
+//$output = trim(shell_exec($command));
 
 //            $command = 'python python/label/2x1/sku_description.py ' .
 //                escapeshellarg('FDMVVS69495') . ' ' .
@@ -106,7 +159,7 @@ class PrintController extends Controller
 //                escapeshellarg('1') . ' ' .
 //                escapeshellarg('Cod. Universal: 8011003809219') . ' 2>&1';
 //
-//            $output = shell_exec($command);
+//            $output = trim(shell_exec($command));
 
 //            $command = "python python/label/2x1/sku_description_serie.py " .
 //                escapeshellarg("FDMVVS69495") . " " .
@@ -115,4 +168,4 @@ class PrintController extends Controller
 //                escapeshellarg("1") . " " .
 //                escapeshellarg("") . " 2>&1";
 //
-//            $output = shell_exec($command);
+//            $output = trim(shell_exec($command));
