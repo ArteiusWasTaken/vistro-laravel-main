@@ -1,5 +1,5 @@
 import sys
-from zebrafy.zpl import ZPLLabel
+from zebrafy.zebrafy_zpl import ZebrafyZPL
 from zebrafy.utils import pdf_to_image
 
 def convert_pdf_to_zpl(pdf_path):

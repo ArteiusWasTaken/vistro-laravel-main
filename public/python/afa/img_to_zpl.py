@@ -1,5 +1,5 @@
 import sys
-from zebrafy.zpl import ZPLLabel
+from zebrafy.zebrafy_zpl import ZebrafyZPL
 from PIL import Image
 
 def convert_image_to_zpl(image_path):
