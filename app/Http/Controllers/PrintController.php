@@ -127,13 +127,15 @@ class PrintController extends Controller
             $commands .= "¡Gracias por su compra!\n";
             $commands .= chr(27)."a".chr(0); // Volver a alineación izquierda
             $commands .= "--------------------------------\n";
+
+            $commands .= "\n\n\n\n\n\n";
             
             // CORTE DE PAPEL (Ajustado para Epson TM-T88V)
             $commands .= chr(29)."V".chr(65); // Corte parcial (GS V 65)
             $commands .= chr(0); // Cantidad de líneas a avanzar (0)
             
             // Alternativa para corte completo (si el parcial no funciona)
-            // $commands .= chr(29)."V".chr(66).chr(0);
+            $commands .= chr(29)."V".chr(66).chr(0);
             
             // Enviar comandos a la impresora
             fwrite($socket, $commands);
