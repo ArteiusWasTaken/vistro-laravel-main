@@ -110,14 +110,17 @@ class PrintController extends Controller
             $commands .= "TOTAL:           $45.00\n";
             $commands .= "--------------------------------\n";
             
-            // CÓDIGO DE BARRAS (Ajustado para Epson TM-T88V)
-            $barcodeData = "123456789012";
+            // CÓDIGO DE BARRAS (Versión funcional para TM-T88V)
+            $barcodeData = "123456789012"; // 12 dígitos para EAN-13
             
-            // Configurar código de barras (CODE 128)
-            $commands .= chr(29)."H".chr(2); // Posición del texto: 2 (debajo del barcode)
-            $commands .= chr(29)."h".chr(60); // Altura del código (60 dots)
-            $commands .= chr(29)."w".chr(2); // Ancho del código (2: 0.25mm)
-            $commands .= chr(29)."k".chr(73).chr(12).$barcodeData; // CODE 128
+            // Configuración del código de barras
+            $commands .= chr(29)."h".chr(100); // Altura (dots) - valor entre 1-255
+            $commands .= chr(29)."w".chr(3);   // Ancho (1-6) - 3 es un buen valor medio
+            $commands .= chr(29)."H".chr(2);   // Posición del texto: 2 (debajo del barcode)
+            $commands .= chr(29)."k".chr(4).$barcodeData.chr(0); // EAN-13 (código 4)
+            
+            // Alternativa para CODE128 (si prefieres este formato)
+            // $commands .= chr(29)."k".chr(73).chr(12).$barcodeData;
             
             // Salto de línea después del código de barras
             $commands .= "\n\n";
@@ -135,7 +138,7 @@ class PrintController extends Controller
             $commands .= chr(0); // Cantidad de líneas a avanzar (0)
             
             // Alternativa para corte completo (si el parcial no funciona)
-            $commands .= chr(29)."V".chr(66).chr(0);
+            // $commands .= chr(29)."V".chr(66).chr(0);
             
             // Enviar comandos a la impresora
             fwrite($socket, $commands);
