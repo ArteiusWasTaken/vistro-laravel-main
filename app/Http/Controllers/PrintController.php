@@ -76,39 +76,82 @@ class PrintController extends Controller
             $ip = '192.168.15.73';
             $port = 9100;
             
-            // Conectar a la impresora
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
                 throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
             }
             
-            // Configuración inicial de la impresora
             $commands = "";
             
-            // Inicializar impresora (ESC/POS)
+            // Inicialización básica para GHIA
             $commands .= chr(27)."@"; // Reset printer
+            $commands .= chr(27)."R".chr(0); // Set internacional character set USA
+            $commands .= chr(27)."t".chr(0); // Codificación UTF-8
             
-            // Encabezado del ticket (alineación centrada)
+            // Encabezado del ticket
             $commands .= chr(27)."a".chr(1); // Centrar texto
-            $commands .= "NOMBRE DE LA EMPRESA\n";
-            $commands .= "DIRECCION DE LA EMPRESA\n";
-            $commands .= "TELEFONO: 123-456-7890\n";
-            $commands .= "--------------------------------\n";
+            $commands .= "MI EMPRESA\n";
+            $commands .= "DIRECCION\n";
+            $commands .= "TEL: 123-456-7890\n";
+            $commands .= "-----------------------\n";
             
-            // Detalles del ticket (alineación izquierda)
+            // Detalles del ticket
             $commands .= chr(27)."a".chr(0); // Alinear izquierda
             $commands .= "Fecha: ".date('d/m/Y H:i:s')."\n";
             $commands .= "Ticket #: 12345\n";
-            $commands .= "Atendió: Juan Perez\n";
-            $commands .= "--------------------------------\n";
-            $commands .= "PRODUCTO          CANT  PRECIO\n";
-            $commands .= "--------------------------------\n";
-            $commands .= "Producto 1        1     $10.00\n";
-            $commands .= "Producto 2        2     $20.00\n";
-            $commands .= "Producto 3        1     $15.00\n";
-            $commands .= "--------------------------------\n";
-            $commands .= "TOTAL:           $45.00\n";
-            $commands .= "--------------------------------\n";
+            $commands .= "-----------------------\n";
+            $commands .= "PRODUCTO       CANT  TOTAL\n";
+            $commands .= "-----------------------\n";
+            $commands .= "Producto 1     1    $10.00\n";
+            $commands .= "Producto 2     2    $20.00\n";
+            $commands .= "-----------------------\n";
+            $commands .= "TOTAL:        $30.00\n";
+            $commands .= "-----------------------\n\n";
+            
+            // CÓDIGO DE BARRAS CODE128 PARA GHIA GTP-801
+            $barcodeData = "ABC123456789"; // Datos alfanuméricos
+            
+            // Configuración específica para GHIA:
+            $commands .= chr(29)."h".chr(100); // Altura (1-255 dots)
+            $commands .= chr(29)."w".chr(2);   // Ancho (1-6, 2 es estándar)
+            $commands .= chr(29)."f".chr(0);   // Fuente del texto (0=A, 1=B)
+            $commands .= chr(29)."H".chr(2);   // Posición del texto (2=debajo)
+            
+            // Comando CODE128 modificado para GHIA:
+            $len = strlen($barcodeData);
+            $commands .= chr(29)."k".chr(73).chr($len).$barcodeData;
+            
+            /* 
+            Estructura especial para GHIA GTP-801:
+            1D 6B 49 [n] [data] 
+            Donde:
+            - 1D 6B: Inicio código de barras
+            - 49: Selecciona CODE128 (73 en decimal)
+            - [n]: Longitud de los datos (1 byte)
+            - [data]: Los datos del código
+            */
+            
+            $commands .= "\n\n\n\n"; // Espacios después del código
+            
+            // Pie del ticket
+            $commands .= chr(27)."a".chr(1); // Centrar
+            $commands .= "Gracias por su compra\n";
+            $commands .= chr(27)."a".chr(0); // Alinear izquierda
+            $commands .= "-----------------------\n";
+            
+            // Corte de papel para GHIA
+            $commands .= chr(29)."V".chr(65).chr(0); // Corte parcial
+            // Alternativa: $commands .= chr(29)."V".chr(66).chr(0); // Corte completo
+            
+            // Enviar comandos
+            fwrite($socket, $commands);
+            fclose($socket);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Ticket impreso',
+                'hex_sent' => bin2hex($commands) // Para depuración
+            ]);
             
             // CÓDIGO DE BARRAS (Versión funcional para TM-T88V)
             /* EAN 13 funciona
@@ -120,44 +163,6 @@ class PrintController extends Controller
             $commands .= chr(29)."H".chr(2);   // Posición del texto: 2 (debajo del barcode)
             $commands .= chr(29)."k".chr(4).$barcodeData.chr(0); // EAN-13 (código 4)
             */
-
-            $barcodeData = "ABC123xyz"; // Esto no es válido en EAN13, pero sí en CODE128
-
-            $commands .= chr(29)."H".chr(2);       
-            $commands .= chr(29)."h".chr(100);     
-            $commands .= chr(29)."w".chr(3);       
-            $commands .= chr(29)."k".chr(73).chr(strlen($barcodeData)).$barcodeData;
-            
-            // Alternativa para CODE128 (si prefieres este formato)
-            // $commands .= chr(29)."k".chr(73).chr(12).$barcodeData;
-            
-            // Salto de línea después del código de barras
-            $commands .= "\n\n";
-            
-            // Mensaje final (centrado)
-            $commands .= chr(27)."a".chr(1); // Centrar texto
-            $commands .= "¡Gracias por su compra!\n";
-            $commands .= chr(27)."a".chr(0); // Volver a alineación izquierda
-            $commands .= "--------------------------------\n";
-
-            $commands .= "\n\n\n\n\n\n";
-            
-            // CORTE DE PAPEL (Ajustado para Epson TM-T88V)
-            $commands .= chr(29)."V".chr(65); // Corte parcial (GS V 65)
-            $commands .= chr(0); // Cantidad de líneas a avanzar (0)
-            
-            // Alternativa para corte completo (si el parcial no funciona)
-            // $commands .= chr(29)."V".chr(66).chr(0);
-            
-            // Enviar comandos a la impresora
-            fwrite($socket, $commands);
-            fclose($socket);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Ticket impreso correctamente',
-                'data' => bin2hex($commands) // Para depuración
-            ]);
             
         } catch (Exception $exception) {
             return response()->json([
