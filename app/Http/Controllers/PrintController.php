@@ -88,19 +88,15 @@ class PrintController extends Controller
             // Inicializar impresora (ESC/POS)
             $commands .= chr(27)."@"; // Reset printer
             
-            // Establecer alineación centrada
-            $commands .= chr(27)."a".chr(1);
-            
-            // Encabezado del ticket
+            // Encabezado del ticket (alineación centrada)
+            $commands .= chr(27)."a".chr(1); // Centrar texto
             $commands .= "NOMBRE DE LA EMPRESA\n";
             $commands .= "DIRECCION DE LA EMPRESA\n";
             $commands .= "TELEFONO: 123-456-7890\n";
             $commands .= "--------------------------------\n";
             
-            // Volver a alineación izquierda
-            $commands .= chr(27)."a".chr(0);
-            
-            // Detalles del ticket
+            // Detalles del ticket (alineación izquierda)
+            $commands .= chr(27)."a".chr(0); // Alinear izquierda
             $commands .= "Fecha: ".date('d/m/Y H:i:s')."\n";
             $commands .= "Ticket #: 12345\n";
             $commands .= "Atendió: Juan Perez\n";
@@ -111,35 +107,33 @@ class PrintController extends Controller
             $commands .= "Producto 2        2     $20.00\n";
             $commands .= "Producto 3        1     $15.00\n";
             $commands .= "--------------------------------\n";
-            
-            // Total
             $commands .= "TOTAL:           $45.00\n";
             $commands .= "--------------------------------\n";
             
-            // Agregar código de barras (CODE 128)
-            // Primero configuramos el código de barras
-            $barcodeData = "123456789012"; // Datos del código de barras
+            // CÓDIGO DE BARRAS (Ajustado para Epson TM-T88V)
+            $barcodeData = "123456789012";
             
-            // Configurar posición del código de barras (centrado)
-            $commands .= chr(27)."a".chr(1);
-            
-            // Imprimir texto debajo del código de barras
-            $commands .= chr(29)."h".chr(60); // Altura del código de barras
-            $commands .= chr(29)."w".chr(2); // Ancho del código de barras
+            // Configurar código de barras (CODE 128)
+            $commands .= chr(29)."H".chr(2); // Posición del texto: 2 (debajo del barcode)
+            $commands .= chr(29)."h".chr(60); // Altura del código (60 dots)
+            $commands .= chr(29)."w".chr(2); // Ancho del código (2: 0.25mm)
             $commands .= chr(29)."k".chr(73).chr(12).$barcodeData; // CODE 128
             
-            // Texto debajo del código de barras
-            $commands .= "\n".$barcodeData."\n";
+            // Salto de línea después del código de barras
+            $commands .= "\n\n";
             
-            // Volver a alineación izquierda
-            $commands .= chr(27)."a".chr(0);
-            
-            // Mensaje final
+            // Mensaje final (centrado)
+            $commands .= chr(27)."a".chr(1); // Centrar texto
             $commands .= "¡Gracias por su compra!\n";
+            $commands .= chr(27)."a".chr(0); // Volver a alineación izquierda
             $commands .= "--------------------------------\n";
             
-            // Cortar papel (completo o parcial)
-            $commands .= chr(29)."V".chr(66).chr(0); // Cortar papel (GS V 66)
+            // CORTE DE PAPEL (Ajustado para Epson TM-T88V)
+            $commands .= chr(29)."V".chr(65); // Corte parcial (GS V 65)
+            $commands .= chr(0); // Cantidad de líneas a avanzar (0)
+            
+            // Alternativa para corte completo (si el parcial no funciona)
+            // $commands .= chr(29)."V".chr(66).chr(0);
             
             // Enviar comandos a la impresora
             fwrite($socket, $commands);
