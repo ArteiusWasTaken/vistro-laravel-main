@@ -19,9 +19,9 @@ class PrintController extends Controller
             $ip = '192.168.15.72';
             $port = 9100;
 
-            $output = '^XA ZPL & PDF ^XZ';
-//            $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('img/test/label.pdf') . ' 2>&1';
-//            $output = trim(trim(shell_exec($command)));
+            //$output = '^XA ZPL & PDF ^XZ';
+            $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('img/test/label.pdf') . ' 2>&1';
+            $output = trim(trim(shell_exec($command)));
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
