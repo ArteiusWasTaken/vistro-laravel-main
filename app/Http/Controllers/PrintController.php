@@ -111,12 +111,22 @@ class PrintController extends Controller
             $commands .= "--------------------------------\n";
             
             // CÓDIGO DE BARRAS (Versión funcional para TM-T88V)
-            $barcodeData = "123456789012"; // Puede ser alfanumérico
+            /* EAN 13 funciona
+            $barcodeData = "123456789012"; // 12 dígitos para EAN-13
+            
+            // Configuración del código de barras
+            $commands .= chr(29)."h".chr(100); // Altura (dots) - valor entre 1-255
+            $commands .= chr(29)."w".chr(3);   // Ancho (1-6) - 3 es un buen valor medio
+            $commands .= chr(29)."H".chr(2);   // Posición del texto: 2 (debajo del barcode)
+            $commands .= chr(29)."k".chr(4).$barcodeData.chr(0); // EAN-13 (código 4)
+            */
 
-            $commands .= chr(29)."H".chr(2);       // Texto debajo
-            $commands .= chr(29)."h".chr(100);     // Altura
-            $commands .= chr(29)."w".chr(3);       // Ancho
-            $commands .= chr(29)."k".chr(73).chr(strlen($barcodeData)).$barcodeData; // 73 = CODE128
+            $barcodeData = "ABC123xyz"; // Esto no es válido en EAN13, pero sí en CODE128
+
+            $commands .= chr(29)."H".chr(2);       
+            $commands .= chr(29)."h".chr(100);     
+            $commands .= chr(29)."w".chr(3);       
+            $commands .= chr(29)."k".chr(73).chr(strlen($barcodeData)).$barcodeData;
             
             // Alternativa para CODE128 (si prefieres este formato)
             // $commands .= chr(29)."k".chr(73).chr(12).$barcodeData;
