@@ -19,9 +19,9 @@ class PrintController extends Controller
             $ip = '192.168.15.72';
             $port = 9100;
 
-//            $output = '^XA ZPL & PDF ^XZ';
-            $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('img/test/label.pdf') . ' 2>&1';
-            $output = trim(trim(shell_exec($command)));
+            $output = '^XA ZPL & PDF ^XZ';
+//            $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('img/test/label.pdf') . ' 2>&1';
+//            $output = trim(trim(shell_exec($command)));
 
             $socket = fsockopen($ip, $port, $errno, $errstr, 5);
             if (!$socket) {
@@ -38,32 +38,32 @@ class PrintController extends Controller
         }
 
 
-        try {
-            $ip = '192.168.15.72';
-            $port = 9100;
-
-//            $output = '^XA ZPL & PDF ^XZ';
-            $command = 'python3 python/afa/img_to_zpl.py ' . escapeshellarg('img/test/omg.png') . ' 2>&1';
-            $output2 = trim(shell_exec($command));
-
-            $socket = fsockopen($ip, $port, $errno, $errstr, 5);
-            if (!$socket) {
-                throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
-            }
-
-            fwrite($socket, $output2);
-            fclose($socket);
-
-        } catch (Exception $exception) {
-            return response()->json([
-                'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
-            ], 500);
-        }
+//        try {
+//            $ip = '192.168.15.72';
+//            $port = 9100;
+//
+////            $output2 = '^XA ZPL & PDF ^XZ';
+//            $command = 'python3 python/afa/img_to_zpl.py ' . escapeshellarg('img/test/omg.png') . ' 2>&1';
+//            $output2 = trim(shell_exec($command));
+//
+//            $socket = fsockopen($ip, $port, $errno, $errstr, 5);
+//            if (!$socket) {
+//                throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
+//            }
+//
+//            fwrite($socket, $output2);
+//            fclose($socket);
+//
+//        } catch (Exception $exception) {
+//            return response()->json([
+//                'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
+//            ], 500);
+//        }
 
         return response()->json([
             'Respuesta' => 'Enviado correctamente',
             'data' => $output,
-            'data2' => $output2
+//            'data2' => $output2
         ]);
     }
 
