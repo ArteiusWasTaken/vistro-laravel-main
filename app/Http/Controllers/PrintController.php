@@ -245,7 +245,7 @@ class PrintController extends Controller
             // 9. Cerrar conexión
             $printer->close();
             
-            return response()->json(['success' => true, 'message' => 'Ticket impreso']);
+            return response()->json(['success' => true, 'message' => 'Ticket impreso', 'tamanio' => $width]);
             
         } catch (Exception $exception) {
             return response()->json([
