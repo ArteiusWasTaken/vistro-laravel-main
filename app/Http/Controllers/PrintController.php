@@ -205,7 +205,7 @@ class PrintController extends Controller
             
             // Código de barras
             $printer->setBarcodeHeight(100);
-            $printer->barcode("ABC123456789", Printer::BARCODE_CODE128);
+            $printer->barcode("12121213", Printer::BARCODE_CODE128);
             
             // Pie y corte
             $printer->feed(3);
