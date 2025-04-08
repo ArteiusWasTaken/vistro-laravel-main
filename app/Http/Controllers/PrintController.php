@@ -180,43 +180,57 @@ class PrintController extends Controller
     public function tickets_usb(): JsonResponse
     {
         try {
-            // Configuración
-            $printerDevice = "/dev/usb/lp0"; // Linux
-            $barcodeData = "{B}ABC123";    // Para datos alfanuméricos
-            // $printerDevice = "COM3"; // Windows (para impresoras USB virtual COM)
+            // 1. Configurar conector - elige una opción:
+    
+            // a) Para impresora USB directa (Linux)
+            $connector = new FilePrintConnector("/dev/usb/lp0");
             
-            // Crear conector
-            $connector = new FilePrintConnector($printerDevice);
+            // b) Para impresora de red
+            // $connector = new NetworkPrintConnector("192.168.1.100", 9100);
+            
+            // 2. Crear instancia de impresora
             $printer = new Printer($connector);
             
-            // Configurar impresora
+            // 3. Configuración inicial
             $printer->initialize();
             $printer->setJustification(Printer::JUSTIFY_CENTER);
             
-            // Encabezado
+            // 4. Encabezado del ticket
             $printer->text("MI EMPRESA\n");
             $printer->text("DIRECCION\n");
             $printer->text("TEL: 123-456-7890\n");
-            $printer->text("-----------------------\n");
+            $printer->text("----------------\n");
             
-            // Detalles
+            // 5. Detalles del ticket
             $printer->setJustification(Printer::JUSTIFY_LEFT);
             $printer->text("Fecha: ".date('d/m/Y H:i:s')."\n");
-            // ... resto del contenido ...
+            $printer->text("Ticket #: 12345\n");
+            $printer->text("----------------\n");
             
-            // Código de barras
+            // 6. Configurar código de barras (sin constantes)
+            $barcodeData = "12121213"; // Tus datos numéricos
             
-            $printer->setBarcodeHeight(100);
-
-            $barcodeContent = "12121213";
+            // Configuración del código de barras:
+            // - 65 = CODE128-A (caracteres estándar)
+            // - 66 = CODE128-B (alfanumérico)
+            // - 67 = CODE128-C (numérico puro, más compacto)
             
-            $printer->barcode("{A}".$barcodeContent, Printer::BARCODE_CODE128_A);
+            $printer->setBarcodeHeight(80);       // Altura (1-255)
+            $printer->setBarcodeWidth(3);        // Ancho (1-5)
+            $printer->setBarcodeTextPosition(2); // 1=arriba, 2=abajo, 0=oculto
             
-            // Pie y corte
-            $printer->feed(3);
-            $printer->cut();
+            // Imprimir código de barras (67 = CODE128-C para datos numéricos)
+            $printer->barcode($barcodeData, 67);
             
-            // Cerrar
+            // 7. Pie del ticket
+            $printer->feed(2);
+            $printer->setJustification(Printer::JUSTIFY_CENTER);
+            $printer->text("Gracias por su compra\n");
+            
+            // 8. Cortar papel (formato Epson)
+            $printer->cut(Printer::CUT_PARTIAL);
+            
+            // 9. Cerrar conexión
             $printer->close();
             
             return response()->json(['success' => true, 'message' => 'Ticket impreso']);
