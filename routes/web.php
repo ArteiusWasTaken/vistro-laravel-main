@@ -10,6 +10,8 @@ Route::get('/', function () {
 
 Route::prefix('dev')->group(function () {
     Route::get('/ka', [PrintController::class, 'keepAlive']);
+
+    Route::get('usb', [PrintController::class, 'tickets_usb']);
 });
 
 Route::middleware([JwtMiddleware::class])->group(function () {
@@ -18,6 +20,5 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     });
     Route::prefix('tickets')->group(function () {
         Route::get('/', [PrintController::class, 'tickets']);
-        Route::get('usb', [PrintController::class, 'tickets_usb']);
     });
 });
