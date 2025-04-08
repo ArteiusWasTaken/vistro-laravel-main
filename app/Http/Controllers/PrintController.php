@@ -226,7 +226,7 @@ class PrintController extends Controller
                 }
             }
             else {
-                $width = $tamanio;
+                $width = (int) $tamanio;
             }
             
             // Configuración del código de barras:
