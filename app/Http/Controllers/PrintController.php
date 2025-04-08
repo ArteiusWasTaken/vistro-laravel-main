@@ -214,11 +214,11 @@ class PrintController extends Controller
 
             // Establecer un ancho base (entre 1 y 6, recomendado por la mayoría de impresoras)
             if ($length >= 10) {
-                $width = 3;
-            } elseif ($length >= 6) {
                 $width = 2;
-            } else {
+            } elseif ($length >= 6) {
                 $width = 3;
+            } else {
+                $width = 4;
             }
             
             // Configuración del código de barras:
