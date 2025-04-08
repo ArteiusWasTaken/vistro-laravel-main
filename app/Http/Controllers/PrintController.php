@@ -209,6 +209,7 @@ class PrintController extends Controller
             
             // 6. Configurar código de barras (sin constantes)
             $barcodeData = "1534134"; // Tus datos numéricos
+            $maxWidth = 576; // Ajusta según tu impresora
             $barcodeLength = strlen($barcodeData);
             $optimalWidth = min(6, max(2, floor($maxWidth / ($barcodeLength * 10)))); // Cálculo dinámico
             
