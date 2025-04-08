@@ -177,7 +177,7 @@ class PrintController extends Controller
     /**
      * @return JsonResponse
      */
-    public function tickets_usb(): JsonResponse
+    public function tickets_usb($barcode): JsonResponse
     {
         try {
             // 1. Configurar conector - elige una opción:
@@ -208,10 +208,9 @@ class PrintController extends Controller
             $printer->text("----------------\n");
             
             // 6. Configurar código de barras (sin constantes)
-            $barcodeData = "1534134111"; // Tus datos numéricos
 
             // Calcular ancho dinámico según la longitud del código
-            $length = strlen($barcodeData);
+            $length = strlen($barcode);
 
             // Establecer un ancho base (entre 1 y 6, recomendado por la mayoría de impresoras)
             if ($length <= 8) {
