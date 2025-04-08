@@ -202,7 +202,7 @@ class PrintController extends Controller
             $printer->text("----------------\n");
             
             // 5. Detalles del ticket
-            $printer->setJustification(Printer::JUSTIFY_LEFT);
+            // $printer->setJustification(Printer::JUSTIFY_LEFT);
             $printer->text("Fecha: ".date('d/m/Y H:i:s')."\n");
             $printer->text("Ticket #: 12345\n");
             $printer->text("----------------\n");
