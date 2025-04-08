@@ -208,7 +208,7 @@ class PrintController extends Controller
             $printer->text("----------------\n");
             
             // 6. Configurar código de barras (sin constantes)
-            $barcodeData = "12121213"; // Tus datos numéricos
+            $barcodeData = "45130"; // Tus datos numéricos
             
             // Configuración del código de barras:
             // - 65 = CODE128-A (caracteres estándar)
@@ -220,7 +220,7 @@ class PrintController extends Controller
             $printer->setBarcodeTextPosition(2); // 1=arriba, 2=abajo, 0=oculto
             
             // Imprimir código de barras (67 = CODE128-C para datos numéricos)
-            $printer->barcode($barcodeData, 65);
+            $printer->barcode($barcodeData, 66);
             
             // 7. Pie del ticket
             $printer->feed(2);
