@@ -11,7 +11,7 @@ Route::get('/', function () {
 Route::prefix('dev')->group(function () {
     Route::get('/ka', [PrintController::class, 'keepAlive']);
 
-    Route::get('usb/{barcode}', [PrintController::class, 'tickets_usb']);
+    Route::get('usb/{barcode}/{tamanio}', [PrintController::class, 'tickets_usb']);
 });
 
 Route::middleware([JwtMiddleware::class])->group(function () {

@@ -177,7 +177,7 @@ class PrintController extends Controller
     /**
      * @return JsonResponse
      */
-    public function tickets_usb($barcode): JsonResponse
+    public function tickets_usb($barcode, $tamanio): JsonResponse
     {
         try {
             // 1. Configurar conector - elige una opción:
@@ -210,18 +210,23 @@ class PrintController extends Controller
             // 6. Configurar código de barras (sin constantes)
 
             // Calcular ancho dinámico según la longitud del código
-            $length = strlen($barcode);
+            if (!$tamanio) {
+                $length = strlen($barcode);
 
-            // Establecer un ancho base (entre 1 y 6, recomendado por la mayoría de impresoras)
-            if ($length >= 16) {
-                $width = 1;
+                // Establecer un ancho base (entre 1 y 6, recomendado por la mayoría de impresoras)
+                if ($length >= 16) {
+                    $width = 1;
+                }
+                elseif ($length >= 10) {
+                    $width = 2;
+                } elseif ($length >= 6) {
+                    $width = 3;
+                } else {
+                    $width = 4;
+                }
             }
-            elseif ($length >= 10) {
-                $width = 2;
-            } elseif ($length >= 6) {
-                $width = 3;
-            } else {
-                $width = 4;
+            else {
+                $width = $tamanio;
             }
             
             // Configuración del código de barras:
