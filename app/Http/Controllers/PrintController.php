@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Mike42\Escpos\PrintConnectors\FilePrintConnector;
+use Mike42\Escpos\Printer;
 
 /**
  *
@@ -163,6 +165,56 @@ class PrintController extends Controller
             $commands .= chr(29)."H".chr(2);   // Posición del texto: 2 (debajo del barcode)
             $commands .= chr(29)."k".chr(4).$barcodeData.chr(0); // EAN-13 (código 4)
             */
+            
+        } catch (Exception $exception) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No se pudo imprimir: ' . $exception->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @return JsonResponse
+     */
+    public function tickets_usb(): JsonResponse
+    {
+        try {
+            // Configuración
+            $printerDevice = "/dev/usb/lp0"; // Linux
+            // $printerDevice = "COM3"; // Windows (para impresoras USB virtual COM)
+            
+            // Crear conector
+            $connector = new FilePrintConnector($printerDevice);
+            $printer = new Printer($connector);
+            
+            // Configurar impresora
+            $printer->initialize();
+            $printer->setJustification(Printer::JUSTIFY_CENTER);
+            
+            // Encabezado
+            $printer->text("MI EMPRESA\n");
+            $printer->text("DIRECCION\n");
+            $printer->text("TEL: 123-456-7890\n");
+            $printer->text("-----------------------\n");
+            
+            // Detalles
+            $printer->setJustification(Printer::JUSTIFY_LEFT);
+            $printer->text("Fecha: ".date('d/m/Y H:i:s')."\n");
+            // ... resto del contenido ...
+            
+            // Código de barras
+            $printer->setBarcodeHeight(100);
+            $printer->barcode("ABC123456789", Printer::BARCODE_CODE128);
+            
+            // Pie y corte
+            $printer->feed(3);
+            $printer->cut();
+            
+            // Cerrar
+            $printer->close();
+            
+            return response()->json(['success' => true, 'message' => 'Ticket impreso']);
             
         } catch (Exception $exception) {
             return response()->json([

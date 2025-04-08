@@ -18,5 +18,6 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     });
     Route::prefix('tickets')->group(function () {
         Route::get('/', [PrintController::class, 'tickets']);
+        Route::get('usb', [PrintController::class, 'tickets_usb']);
     });
 });
