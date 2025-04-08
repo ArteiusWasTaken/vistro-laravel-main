@@ -209,9 +209,6 @@ class PrintController extends Controller
             
             // 6. Configurar código de barras (sin constantes)
             $barcodeData = "1534134"; // Tus datos numéricos
-            $maxWidth = 576; // Ajusta según tu impresora
-            $barcodeLength = strlen($barcodeData);
-            $optimalWidth = min(6, max(2, floor($maxWidth / ($barcodeLength * 10)))); // Cálculo dinámico
             
             // Configuración del código de barras:
             // - 65 = CODE128-A (caracteres estándar)
@@ -219,9 +216,9 @@ class PrintController extends Controller
             // - 67 = CODE128-C (numérico puro, más compacto)
             
             // Configurar CODE39 (69 es el tipo numérico para CODE39)
-            $printer->setBarcodeHeight(80); // Altura fija
-            $printer->setBarcodeWidth($optimalWidth); // Ancho dinámico
-            $printer->setBarcodeTextPosition(2); // Texto debajo
+            $printer->setBarcodeHeight(80);
+            $printer->setBarcodeWidth(2);
+            $printer->setBarcodeTextPosition(6); // Texto debajo
             
             // Imprimir código de barras CODE39
             $printer->barcode($barcodeData, 69); // 69 = CODE39
