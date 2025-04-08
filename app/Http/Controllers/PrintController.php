@@ -220,7 +220,7 @@ class PrintController extends Controller
             $printer->setBarcodeTextPosition(2); // 1=arriba, 2=abajo, 0=oculto
             
             // Imprimir código de barras (67 = CODE128-C para datos numéricos)
-            $printer->barcode($barcodeData, 67);
+            $printer->barcode($barcodeData, 66);
             
             // 7. Pie del ticket
             $printer->feed(2);
