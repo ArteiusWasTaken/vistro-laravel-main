@@ -218,21 +218,16 @@ class PrintController extends Controller
                 $length >= 10 => 2,
                 $length >= 7  => 3,
                 $length >= 5  => 4,
+                $length == 4  => 5,
                 default       => 6,
             };
             
-            // Configuración del código de barras:
-            // - 65 = CODE128-A (caracteres estándar)
-            // - 66 = CODE128-B (alfanumérico)
-            // - 67 = CODE128-C (numérico puro, más compacto)
-            
             // Configurar CODE39 (69 es el tipo numérico para CODE39)
-            $printer->setBarcodeHeight(65); // Menor altura
-            $printer->setBarcodeWidth($width);   // Mayor ancho
-            $printer->setBarcodeTextPosition(2); // Texto debajo
+            $printer->setBarcodeHeight(65);
+            $printer->setBarcodeWidth($width);
+            $printer->setBarcodeTextPosition(2);
             
-            // Imprimir código de barras CODE39
-            $printer->barcode($barcode, 69); // 128 = CODE128
+            $printer->barcode($barcode, 69);
             
             // 7. Pie del ticket
             $printer->feed(2);
