@@ -214,10 +214,8 @@ class PrintController extends Controller
 
             // Establecer un ancho base (entre 1 y 6, recomendado por la mayoría de impresoras)
             if ($length <= 8) {
-                $width = 4;
-            } elseif ($length <= 12) {
                 $width = 3;
-            } elseif ($length <= 16) {
+            } elseif ($length <= 12) {
                 $width = 2;
             } else {
                 $width = 1; // Para códigos más largos, usa lo más delgado posible
