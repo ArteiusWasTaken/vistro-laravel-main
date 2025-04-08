@@ -213,20 +213,13 @@ class PrintController extends Controller
             $length = strlen($barcode);
 
             // Establecer un ancho base (entre 1 y 6, recomendado por la mayoría de impresoras)
-            if ($length >= 16) {
-                $width = 1;
-            }
-            elseif ($length >= 10) {
-                $width = 2;
-            } elseif ($length >= 7) {
-                $width = 3;
-            } 
-            elseif ($length >= 5) {
-                $width = 4;
-            }
-            else {
-                $width = 6;
-            }
+            $width = match (true) {
+                $length >= 16 => 1,
+                $length >= 10 => 2,
+                $length >= 7  => 3,
+                $length >= 5  => 4,
+                default       => 6,
+            };
             
             // Configuración del código de barras:
             // - 65 = CODE128-A (caracteres estándar)
