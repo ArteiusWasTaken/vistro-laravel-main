@@ -213,7 +213,10 @@ class PrintController extends Controller
             $length = strlen($barcode);
 
             // Establecer un ancho base (entre 1 y 6, recomendado por la mayoría de impresoras)
-            if ($length >= 10) {
+            if ($length >= 16) {
+                $width = 1;
+            }
+            else if ($length >= 10) {
                 $width = 2;
             } elseif ($length >= 6) {
                 $width = 3;
