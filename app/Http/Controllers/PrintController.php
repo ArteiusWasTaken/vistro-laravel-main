@@ -217,7 +217,7 @@ class PrintController extends Controller
             
             // Configurar CODE39 (69 es el tipo numérico para CODE39)
             $printer->setBarcodeHeight(80);
-            $printer->setBarcodeWidth(6);
+            $printer->setBarcodeWidth(2);
             $printer->setBarcodeTextPosition(2); // Texto debajo
             
             // Imprimir código de barras CODE39
