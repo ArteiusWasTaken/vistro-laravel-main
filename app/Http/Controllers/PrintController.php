@@ -221,7 +221,7 @@ class PrintController extends Controller
             $printer->setBarcodeTextPosition(2); // Texto debajo
             
             // Imprimir código de barras CODE39
-            $printer->barcode($shortCode, 69); // 69 = CODE39
+            $printer->barcode($barcodeData, 69); // 69 = CODE39
             
             // 7. Pie del ticket
             $printer->feed(2);
