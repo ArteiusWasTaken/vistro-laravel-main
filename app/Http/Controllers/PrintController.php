@@ -224,7 +224,7 @@ class PrintController extends Controller
             elseif ($length >= 6) {
                 $width = 4;
             }
-            elseif ($length >= 5) {
+            elseif ($length >= 4) {
                 $width = 5;
             }
             else {
