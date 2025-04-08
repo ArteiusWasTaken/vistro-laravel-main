@@ -205,23 +205,12 @@ class PrintController extends Controller
             // ... resto del contenido ...
             
             // Código de barras
-            /*
+            
             $printer->setBarcodeHeight(100);
 
             $barcodeContent = "12121213";
-
-            // Para datos alfanuméricos
-            if (preg_match('/^[0-9]+$/', $barcodeContent)) {
-                // Si es solo numérico, usa CODE128_C
-                $printer->barcode($barcodeContent, Printer::BARCODE_CODE128_C);
-            } elseif (preg_match('/^[A-Za-z0-9]+$/', $barcodeContent)) {
-                // Si es alfanumérico sin caracteres especiales, usa CODE128_B
-                $printer->barcode($barcodeContent, Printer::BARCODE_CODE128_B);
-            } else {
-                // Para otros casos, usa CODE128_A
-                $printer->barcode("{A}".$barcodeContent, Printer::BARCODE_CODE128_A);
-            }
-            */
+            
+            $printer->barcode("{A}".$barcodeContent, Printer::BARCODE_CODE128_A);
             
             // Pie y corte
             $printer->feed(3);
