@@ -43,10 +43,11 @@ if extra:
 
 # Escribir el código de barras y el SKU
 l.origin(barcode_start_cords_x - (sku_length / 2), 2)
-l.barcode_field_default(module_width=barcode_width_length, bar_width_ratio=2, height=0.9)
-l.barcode(barcode_type='C', data='12345678987654321', height=50, check_digit='N')
+l.barcode_field_default(module_width=barcode_width_length, bar_width_ratio=2, height=50)
+l.barcode('C', '12345678987654321', height=50, check_digit='N')
 l.write_text(sku)
 l.endorigin()
+
 
 # Finalizar la etiqueta ZPL y agregar la cantidad de impresiones
 zpl_output = l.dumpZPL()[:-3]
