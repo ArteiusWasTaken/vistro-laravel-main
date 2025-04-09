@@ -15,12 +15,12 @@ sku_length = len(sku)
 barcode_width_length = 0.2 if sku_length <= 14 else 0.1
 
 # Ajusta esta variable para mover el código de barras a la izquierda o derecha
-barcode_shift = 1  # Aumentar para mover a la derecha, disminuir para mover a la izquierda
+#barcode_shift = 1  # Aumentar para mover a la derecha, disminuir para mover a la izquierda
 
-barcode_start_cords_x = (4 if sku_length <= 14 else 15) + barcode_shift
+barcode_start_cords_x = (3 if sku_length <= 14 else 15) + barcode_shift
 
 # Crear una nueva etiqueta ZPL
-l = zpl.Label(50.8, 25.4)  # Tamaño de la etiqueta en milímetros
+l = zpl.Label(50.8, 28.4)  # Tamaño de la etiqueta en milímetros
 
 # Configuración de la altura y anchura del texto y de la línea
 char_height = 2
