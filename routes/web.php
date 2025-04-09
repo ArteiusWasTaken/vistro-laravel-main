@@ -8,17 +8,22 @@ Route::get('/', function () {
     return phpinfo();
 });
 
-Route::prefix('dev')->group(function () {
-    Route::get('/ka', [PrintController::class, 'keepAlive']);
+Route::group(['prefix' => 'dev'], function () {
+    Route::get('ka', [PrintController::class, 'keepAlive']);
+    Route::get('picking', [PrintController::class, 'picking']);
 
     Route::get('usb/{barcode}', [PrintController::class, 'tickets_usb']);
 });
 
-Route::middleware([JwtMiddleware::class])->group(function () {
-    Route::prefix('etiquetas')->group(function () {
-        Route::get('/', [PrintController::class, 'etiquetas']);
+Route::group(['middleware' => [JwtMiddleware::class]], function () {
+    Route::group(['prefix' => 'etiquetas'], function () {
+//        Route::get('/', [PrintController::class, 'etiquetas']);
+        Route::get('/', [PrintController::class, 'picking2']);
+
     });
-    Route::prefix('tickets')->group(function () {
+
+    Route::group(['prefix' => 'tickets'], function () {
         Route::get('/', [PrintController::class, 'tickets']);
     });
 });
+
