@@ -7,9 +7,8 @@ import json
 # Obtener los argumentos de la línea de comandos
 sku = str(sys.argv[1])
 desc = str(sys.argv[2])
-printer = str(sys.argv[3])
-qty = str(sys.argv[4])
-extra = str(sys.argv[5])
+qty = str(sys.argv[3])
+extra = str(sys.argv[4])
 
 # Configuración para la longitud del SKU y el código de barras
 sku_length = len(sku)
@@ -58,8 +57,6 @@ file_name = str(uuid.uuid1()) + ".txt"
 with open(file_name, "w+") as f:
     f.write(zpl_output)
 
-# Enviar la etiqueta ZPL a la impresora
-os.system("lp -d " + printer + " -o raw " + file_name + "")
 
 # Eliminar el archivo temporal
 os.remove(file_name)
