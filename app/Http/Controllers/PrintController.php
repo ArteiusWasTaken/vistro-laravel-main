@@ -83,8 +83,7 @@ class PrintController extends Controller
         }
 
         return response()->json([
-            'Respuesta' => 'Enviado correctamente',
-            'data' => $output,
+            $output,
         ]);
     }
 
@@ -366,7 +365,7 @@ class PrintController extends Controller
 
 //            $command = "python python/label/2x1/sku_description_serie.py " .
 //                escapeshellarg("FDMVVS69495") . " " .
-//                escapeshellarg("Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre") . " " .
+        //                escapeshellarg("Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre") . " " .
 //                escapeshellarg("FDMVVS69495") . " " .
 //                escapeshellarg("1") . " " .
 //                escapeshellarg("") . " 2>&1";

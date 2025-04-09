@@ -15,22 +15,44 @@ sku_length = len(sku)
 barcode_width_length = 0.2 if sku_length <= 14 else 0.1
 
 # Ajusta esta variable para mover el código de barras a la izquierda o derecha
-#barcode_shift = 1  # Aumentar para mover a la derecha, disminuir para mover a la izquierda
+barcode_shift = 0  # Aumentar para mover a la derecha, disminuir para mover a la izquierda
 
-barcode_start_cords_x = (3 if sku_length <= 14 else 15)
+barcode_start_cords_x = (6 if sku_length <= 14 else 13) + barcode_shift
 
 # Crear una nueva etiqueta ZPL
-l = zpl.Label(50.8, 28.4)  # Tamaño de la etiqueta en milímetros
+l = zpl.Label(50.8, 25.4)  # Tamaño de la etiqueta en milímetros
 
 # Configuración de la altura y anchura del texto y de la línea
 char_height = 2
-char_width = 1.2
+char_width = 1.1
 line_width = 35
 
-# Escribir la descripción en la etiqueta en múltiples líneas
-lines_of_desc = [desc[i:i+50] for i in range(0, len(desc), 50)]
+# Función para dividir la descripción sin cortar palabras
+def split_text_without_cutting_words(text, max_length):
+    words = text.split()
+    lines = []
+    current_line = ""
+
+    for word in words:
+        # Si agregar la palabra excede el máximo, la colocamos en una nueva línea
+        if len(current_line) + len(word) + 1 > max_length:
+            lines.append(current_line)
+            current_line = word
+        else:
+            if current_line:
+                current_line += " "
+            current_line += word
+
+    # Añadir la última línea
+    if current_line:
+        lines.append(current_line)
+
+    return lines
+
+# Escribir la descripción en la etiqueta en múltiples líneas sin cortar palabras
+lines_of_desc = split_text_without_cutting_words(desc, 50)[:3]  # Limitar a 3 líneas para un máximo de 150 caracteres
 start_y = 10
-for i, line in enumerate(lines_of_desc[:3]):  # Limitar a 3 líneas para un máximo de 150 caracteres
+for i, line in enumerate(lines_of_desc):
     l.origin(2, start_y + (i * 3))
     l.write_text(line, char_height=char_height, char_width=char_width, line_width=line_width)
     l.endorigin()
@@ -48,7 +70,6 @@ l.barcode('C', '12345678987654321', height=50, check_digit='N')
 l.write_text(sku)
 l.endorigin()
 
-
 # Finalizar la etiqueta ZPL y agregar la cantidad de impresiones
 zpl_output = l.dumpZPL()[:-3]
 zpl_output += "^PQ" + qty + ",0,1,Y^XZ"
@@ -57,7 +78,6 @@ zpl_output += "^PQ" + qty + ",0,1,Y^XZ"
 file_name = str(uuid.uuid1()) + ".txt"
 with open(file_name, "w+") as f:
     f.write(zpl_output)
-
 
 # Eliminar el archivo temporal
 os.remove(file_name)
