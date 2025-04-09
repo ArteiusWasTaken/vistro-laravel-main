@@ -21,41 +21,30 @@ class PrintController extends Controller
      */
     public function etiquetas(Request $request): JsonResponse
     {
-
         $tipo = $request->input('tipo');
         $data = json_decode($request->input('data'));
 
-        $impresora = DB::table('impresora')
-            ->where('id', $data->impresora)
-            ->first();
+        $impresora = DB::table('impresora')->where('id', $data->impresora)->first();
+        if (!$impresora) {
+            return response()->json([
+                'code' => 500,
+                'message' => 'No se encontró la impresora proporcionada ' . self::logLocation()
+            ]);
+        }
 
         $ip = $impresora->ip;
         $tamanio = $impresora->tamanio;
         $port = 9100;
 
-        if (empty($impresora)) {
-            return response()->json([
-                'code' => 500,
-                'message' => 'No se encontró la impresora proporcionada' . ' ' . self::logLocation()
-            ]);
-        }
-
-        if ($tipo == '1') {
-            if (empty($data->etiquetas)) {
-                $etiquetas = [$data];
-            } else {
-                $etiquetas = $data->etiquetas;
-            }
-        }
+        $etiquetas = ($tipo == '1' && !empty($data->etiquetas)) ? $data->etiquetas : [$data];
 
         foreach ($etiquetas as $etiqueta) {
             try {
-                //$output = '^XA ZPL & PDF ^XZ';
                 $command = 'python python/label/' . $tamanio . '/sku_description.py ' .
                     escapeshellarg($etiqueta->codigo) . ' ' .
                     escapeshellarg($etiqueta->descripcion) . ' ' .
                     escapeshellarg($etiqueta->cantidad) . ' ' .
-                    escapeshellarg($etiqueta->extra) . ' 2>&1';
+                    escapeshellarg($etiqueta->extra ?? '') . ' 2>&1';
 
                 $output = trim(shell_exec($command));
 
@@ -67,24 +56,21 @@ class PrintController extends Controller
                 fwrite($socket, $output);
                 fclose($socket);
 
-            } catch (Exception $exception) {
+            } catch (Exception $e) {
                 ErrorLoggerService::log(
                     'Error en etiquetas. Impresora: ' . $ip,
                     'PrintController',
                     [
-                        'exception' => $exception->getMessage(),
+                        'exception' => $e->getMessage(),
                         'line' => self::logLocation()
                     ]
                 );
                 return response()->json([
-                    'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
+                    'Error' => 'No se pudo imprimir: ' . $e->getMessage()
                 ], 500);
             }
         }
-
-        return response()->json([
-            $output,
-        ]);
+        return response()->json([$output]);
     }
 
     /**
@@ -311,7 +297,6 @@ class PrintController extends Controller
 
         foreach ($ips as $ip) {
             try {
-                // Enviar comando vacío para que no entre en sleep.
                 $output = '^XA^XZ';
                 $socket = fsockopen($ip, $port, $errno, $errstr, 5);
 
@@ -337,8 +322,7 @@ class PrintController extends Controller
     /**
      * @return string
      */
-    private
-    static function logLocation(): string
+    private static function logLocation(): string
     {
         $sis = 'BE'; // Front o Back
         $ini = 'PC'; // Primera letra del Controlador y Letra de la seguna Palabra: Controller, service
@@ -346,28 +330,92 @@ class PrintController extends Controller
         $trace = debug_backtrace()[0];
         return ('<br>' . $sis . $ini . $trace['line'] . $fin);
     }
+
+    public function etiquetasSerie(Request $request)
+    {
+        $data = json_decode($request->input("data"));
+        $etiquetas = [];
+        $cantidad = (int) explode(".", $data->cantidad)[0];
+
+        $impresora = DB::table('impresora')->where('id', $data->impresora)->first();
+        if (!$impresora) {
+            return response()->json([
+                "code" => 500,
+                "message" => "No se encontró la impresora proporcionada " . self::logLocation()
+            ]);
+        }
+
+        $modelo = DB::table("modelo")
+            ->select("id", "consecutivo", "descripcion")
+            ->where("sku", $data->codigo)
+            ->first();
+
+        if (!$modelo) {
+            $modelo = DB::table("modelo_sinonimo")
+                ->join("modelo", "modelo_sinonimo.id_modelo", "=", "modelo.id")
+                ->select("modelo.id", "modelo.consecutivo", "modelo.descripcion")
+                ->where("modelo_sinonimo.codigo", trim($data->codigo))
+                ->first();
+
+            if (!$modelo) {
+                return response()->json([
+                    "code" => 500,
+                    "message" => "El código proporcionado no existe en la base de datos, favor de contactar a un administrador " . self::logLocation()
+                ]);
+            }
+        }
+
+        $fecha = date("mY");
+        $prefijo = str_pad(substr($modelo->id, -5), 5, "0", STR_PAD_LEFT);
+        $consecutivo_base = (int)$modelo->consecutivo;
+
+        for ($i = 0; $i < $cantidad; $i++) {
+            $consecutivo = $consecutivo_base + $i + 1;
+            $sufijo = str_pad($consecutivo, 6, "0", STR_PAD_LEFT);
+
+            $etiquetas[] = (object)[
+                'serie' => $prefijo . $fecha . $sufijo,
+                'codigo' => $data->codigo,
+                'descripcion' => $modelo->descripcion,
+                'cantidad' => 1,
+                'extra' => property_exists($data, "extra") ? $data->extra : ""
+            ];
+        }
+
+        $nuevo_consecutivo = ($consecutivo_base + $cantidad >= 800000) ? 1 : ($consecutivo_base + $cantidad);
+        DB::table("modelo")->where("id", $modelo->id)->update(["consecutivo" => $nuevo_consecutivo]);
+
+        foreach ($etiquetas as $etiqueta) {
+            try {
+                $command = 'python python/label/' . $impresora->tamanio . '/sku_description_serie.py ' .
+                    escapeshellarg($etiqueta->codigo) . ' ' .
+                    escapeshellarg($etiqueta->descripcion) . ' ' .
+                    escapeshellarg($etiqueta->serie) . ' ' .
+                    escapeshellarg($etiqueta->cantidad) . ' ' .
+                    escapeshellarg($etiqueta->extra) . ' 2>&1';
+
+                $output = trim(shell_exec($command));
+
+                $socket = fsockopen($impresora->ip, 9100, $errno, $errstr, 5);
+                if (!$socket) {
+                    throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
+                }
+
+                fwrite($socket, $output);
+                fclose($socket);
+
+            } catch (Exception $e) {
+                ErrorLoggerService::log(
+                    'Error en etiquetas. Impresora: ' . $impresora->ip,
+                    'PrintController',
+                    ['exception' => $e->getMessage(), 'line' => self::logLocation()]
+                );
+                return response()->json([
+                    'Error' => 'No se pudo imprimir: ' . $e->getMessage()
+                ], 500);
+            }
+        }
+        return response()->json([$output]);
+    }
+
 }
-
-
-//$command = 'python python/label/2x1/description.py ' .
-//    escapeshellarg('Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre') . ' ' .
-//    escapeshellarg('1') . ' 2>&1';
-//
-//$output = trim(shell_exec($command));
-
-//            $command = 'python python/label/2x1/sku_description.py ' .
-//                escapeshellarg('FDMVVS69495') . ' ' .
-//                escapeshellarg('Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre') . ' ' .
-//                escapeshellarg('1') . ' ' .
-//                escapeshellarg('Cod. Universal: 8011003809219') . ' 2>&1';
-//
-//            $output = trim(shell_exec($command));
-
-//            $command = "python python/label/2x1/sku_description_serie.py " .
-//                escapeshellarg("FDMVVS69495") . " " .
-        //                escapeshellarg("Perfume Versace Eros Eau De Toilette 100 Ml Para Hombre") . " " .
-//                escapeshellarg("FDMVVS69495") . " " .
-//                escapeshellarg("1") . " " .
-//                escapeshellarg("") . " 2>&1";
-//
-//            $output = trim(shell_exec($command));

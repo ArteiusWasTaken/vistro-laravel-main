@@ -13,11 +13,11 @@ extra = str(sys.argv[5])
 sku_length = len(sku)
 serie_length = len(serie)
 
-barcode_width_length = 0.2 if sku_length <= 14 else 0.1
-barcode_start_cords_x = 8.5 if sku_length <= 14 else 15
+barcode_width_length = 0.2 if sku_length <= 10 else 0.1
+barcode_start_cords_x = 5 if sku_length <= 12 else 12
 
-serie_width_length = 0.2 if serie_length <= 14 else 0.1
-serie_start_cords_x = 8.5 if serie_length <= 14 else 15
+serie_width_length = 0.2 if serie_length <= 10 else 0.1
+serie_start_cords_x = 5 if serie_length <= 12 else 10
 
 l = zpl.Label(50.8, 25.4)
 
@@ -25,8 +25,8 @@ wrapped_desc = textwrap.wrap(desc, width=30)
 
 start_y = 2
 for i, line in enumerate(wrapped_desc[:3]):
-    l.origin(2, start_y + (i * 3))
-    l.write_text(line, char_height=1.5, char_width=1, line_width=30, justification='C')
+    l.origin(5, start_y + (i * 3))
+    l.write_text(line, char_height=1.5, char_width=1, line_width=30, justification='L')
     l.endorigin()
 
 l.origin(barcode_start_cords_x - (sku_length / 2), 7)

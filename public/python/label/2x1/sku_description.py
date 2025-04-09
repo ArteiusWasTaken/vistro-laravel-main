@@ -12,7 +12,7 @@ extra = str(sys.argv[4])
 
 # Configuración para la longitud del SKU y el código de barras
 sku_length = len(sku)
-barcode_width_length = 0.2 if sku_length <= 14 else 0.1
+barcode_width_length = 0.2 if sku_length <= 12 else 0.1
 
 # Ajusta esta variable para mover el código de barras a la izquierda o derecha
 barcode_shift = 0  # Aumentar para mover a la derecha, disminuir para mover a la izquierda
