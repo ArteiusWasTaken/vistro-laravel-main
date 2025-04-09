@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Services\ErrorLoggerService;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
 use Mike42\Escpos\Printer;
 
@@ -15,35 +16,75 @@ use Mike42\Escpos\Printer;
 class PrintController extends Controller
 {
     /**
+     * @param Request $request
      * @return JsonResponse
      */
-    public function etiquetas(): JsonResponse
+    public function etiquetas(Request $request): JsonResponse
     {
-        try {
-            $ip = '192.168.15.72';
-            $port = 9100;
 
-            //$output = '^XA ZPL & PDF ^XZ';
-            $command = 'python3 python/afa/pdf_to_zpl.py ' . escapeshellarg('img/test/label.pdf') . ' 2>&1';
-            $output = trim(trim(shell_exec($command)));
+        $tipo = $request->input('tipo');
+        $data = json_decode($request->input('data'));
 
-            $socket = fsockopen($ip, $port, $errno, $errstr, 5);
-            if (!$socket) {
-                throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
-            }
+        $impresora = DB::table('impresora')
+            ->where('id', $data->impresora)
+            ->first();
 
-            fwrite($socket, $output);
-            fclose($socket);
+        $ip = $impresora->ip;
+        $tamanio = $impresora->tamanio;
+        $port = 9100;
 
-        } catch (Exception $exception) {
+        if (empty($impresora)) {
             return response()->json([
-                'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
-            ], 500);
+                'code' => 500,
+                'message' => 'No se encontró la impresora proporcionada' . ' ' . self::logLocation()
+            ]);
         }
+
+        if ($tipo == '1') {
+            if (empty($data->etiquetas)) {
+                $etiquetas = [$data];
+            } else {
+                $etiquetas = $data->etiquetas;
+            }
+        }
+
+        foreach ($etiquetas as $etiqueta) {
+            try {
+                //$output = '^XA ZPL & PDF ^XZ';
+                $command = 'python python/label/' . $tamanio . '/sku_description.py ' .
+                    escapeshellarg($etiqueta->codigo) . ' ' .
+                    escapeshellarg($etiqueta->descripcion) . ' ' .
+                    escapeshellarg($etiqueta->cantidad) . ' ' .
+                    escapeshellarg($etiqueta->extra) . ' 2>&1';
+
+                $output = trim(shell_exec($command));
+
+                $socket = fsockopen($ip, $port, $errno, $errstr, 5);
+                if (!$socket) {
+                    throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
+                }
+
+                fwrite($socket, $output);
+                fclose($socket);
+
+            } catch (Exception $exception) {
+                ErrorLoggerService::log(
+                    'Error en etiquetas. Impresora: ' . $ip,
+                    'PrintController',
+                    [
+                        'exception' => $exception->getMessage(),
+                        'line' => self::logLocation()
+                    ]
+                );
+                return response()->json([
+                    'Error' => 'No se pudo imprimir: ' . $exception->getMessage()
+                ], 500);
+            }
+        }
+
         return response()->json([
             'Respuesta' => 'Enviado correctamente',
             'data' => $output,
-//            'data2' => $output2
         ]);
     }
 
@@ -61,23 +102,23 @@ class PrintController extends Controller
                 throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
             }
 
-            $commands = "";
+            $commands = '';
 
             // Inicialización básica para GHIA
-            $commands .= chr(27) . "@"; // Reset printer
-            $commands .= chr(27) . "R" . chr(0); // Set internacional character set USA
-            $commands .= chr(27) . "t" . chr(0); // Codificación UTF-8
+            $commands .= chr(27) . '@'; // Reset printer
+            $commands .= chr(27) . 'R' . chr(0); // Set internacional character set USA
+            $commands .= chr(27) . 't' . chr(0); // Codificación UTF-8
 
             // Encabezado del ticket
-            $commands .= chr(27) . "a" . chr(1); // Centrar texto
+            $commands .= chr(27) . 'a' . chr(1); // Centrar texto
             $commands .= "MI EMPRESA\n";
             $commands .= "DIRECCION\n";
             $commands .= "TEL: 123-456-7890\n";
             $commands .= "-----------------------\n";
 
             // Detalles del ticket
-            $commands .= chr(27) . "a" . chr(0); // Alinear izquierda
-            $commands .= "Fecha: " . date('d/m/Y H:i:s') . "\n";
+            $commands .= chr(27) . 'a' . chr(0); // Alinear izquierda
+            $commands .= 'Fecha: ' . date('d/m/Y H:i:s') . "\n";
             $commands .= "Ticket #: 12345\n";
             $commands .= "-----------------------\n";
             $commands .= "PRODUCTO       CANT  TOTAL\n";
@@ -89,17 +130,17 @@ class PrintController extends Controller
             $commands .= "-----------------------\n\n";
 
             // CÓDIGO DE BARRAS CODE128 PARA GHIA GTP-801
-            $barcodeData = "ABC123456789"; // Datos alfanuméricos
+            $barcodeData = 'ABC123456789'; // Datos alfanuméricos
 
             // Configuración específica para GHIA:
-            $commands .= chr(29) . "h" . chr(100); // Altura (1-255 dots)
-            $commands .= chr(29) . "w" . chr(2);   // Ancho (1-6, 2 es estándar)
-            $commands .= chr(29) . "f" . chr(0);   // Fuente del texto (0=A, 1=B)
-            $commands .= chr(29) . "H" . chr(2);   // Posición del texto (2=debajo)
+            $commands .= chr(29) . 'h' . chr(100); // Altura (1-255 dots)
+            $commands .= chr(29) . 'w' . chr(2);   // Ancho (1-6, 2 es estándar)
+            $commands .= chr(29) . 'f' . chr(0);   // Fuente del texto (0=A, 1=B)
+            $commands .= chr(29) . 'H' . chr(2);   // Posición del texto (2=debajo)
 
             // Comando CODE128 modificado para GHIA:
             $len = strlen($barcodeData);
-            $commands .= chr(29) . "k" . chr(73) . chr($len) . $barcodeData;
+            $commands .= chr(29) . 'k' . chr(73) . chr($len) . $barcodeData;
 
             /*
             Estructura especial para GHIA GTP-801:
@@ -114,13 +155,13 @@ class PrintController extends Controller
             $commands .= "\n\n\n\n"; // Espacios después del código
 
             // Pie del ticket
-            $commands .= chr(27) . "a" . chr(1); // Centrar
+            $commands .= chr(27) . 'a' . chr(1); // Centrar
             $commands .= "Gracias por su compra\n";
-            $commands .= chr(27) . "a" . chr(0); // Alinear izquierda
+            $commands .= chr(27) . 'a' . chr(0); // Alinear izquierda
             $commands .= "-----------------------\n";
 
             // Corte de papel para GHIA
-            $commands .= chr(29) . "V" . chr(65) . chr(0); // Corte parcial
+            $commands .= chr(29) . 'V' . chr(65) . chr(0); // Corte parcial
             // Alternativa: $commands .= chr(29)."V".chr(66).chr(0); // Corte completo
 
             // Enviar comandos
@@ -162,7 +203,7 @@ class PrintController extends Controller
             // 1. Configurar conector - elige una opción:
 
             // a) Para impresora USB directa (Linux)
-            $connector = new FilePrintConnector("/dev/usb/lp0");
+            $connector = new FilePrintConnector('/dev/usb/lp0');
 
             // b) Para impresora de red
             // $connector = new NetworkPrintConnector("192.168.1.100", 9100);
@@ -182,7 +223,7 @@ class PrintController extends Controller
 
             // 5. Detalles del ticket
             // $printer->setJustification(Printer::JUSTIFY_LEFT);
-            $printer->text("Fecha: " . date('d/m/Y H:i:s') . "\n");
+            $printer->text('Fecha: ' . date('d/m/Y H:i:s') . "\n");
             $printer->text("Ticket #: 12345\n");
             $printer->text("----------------\n");
 
@@ -234,13 +275,28 @@ class PrintController extends Controller
 
     }
 
-    public function picking2(Request $request)
+
+    /**
+     * @return JsonResponse
+     */
+    public function etiquetasData(): JsonResponse
     {
-        ErrorLoggerService::log(
-            'Error en Keep Alive. Impresora: ',
-            'PrintController',
-            [                'line' => self::logVariableLocation()]
-        );
+        $impresoras = DB::table('impresora')
+            ->where('status', 1)
+            ->get()
+            ->toArray();
+
+        $empresas = DB::table('empresa')
+            ->select('empresa', 'bd')
+            ->where('id', '<>', '')
+            ->get()
+            ->toArray();
+
+        return response()->json([
+            'code' => 200,
+            'impresoras' => $impresoras,
+            'empresas' => $empresas
+        ]);
     }
 
     /**
@@ -248,8 +304,10 @@ class PrintController extends Controller
      */
     public function keepAlive(): void
     {
-        //Conseguir impresoras
-        $ips = ['192.168.15.72', '192.168.15.73'];
+        $ips = DB::table('impresora')
+            ->pluck('ip')
+            ->toArray();
+
         $port = 9100;
 
         foreach ($ips as $ip) {
@@ -268,8 +326,10 @@ class PrintController extends Controller
                 ErrorLoggerService::log(
                     'Error en Keep Alive. Impresora: ' . $ip,
                     'PrintController',
-                    ['exception' => $e->getMessage(),
-                        'line' => self::logVariableLocation()]
+                    [
+                        'exception' => $e->getMessage(),
+                        'line' => self::logLocation()
+                    ]
                 );
             }
         }
@@ -278,7 +338,8 @@ class PrintController extends Controller
     /**
      * @return string
      */
-    private static function logVariableLocation()
+    private
+    static function logLocation(): string
     {
         $sis = 'BE'; // Front o Back
         $ini = 'PC'; // Primera letra del Controlador y Letra de la seguna Palabra: Controller, service
@@ -286,7 +347,6 @@ class PrintController extends Controller
         $trace = debug_backtrace()[0];
         return ('<br>' . $sis . $ini . $trace['line'] . $fin);
     }
-
 }
 
 
