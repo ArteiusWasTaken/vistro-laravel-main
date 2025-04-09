@@ -3,62 +3,65 @@ import os
 import zpl
 import uuid
 import json
-import codecs
-import textwrap
 
-sys.stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, errors="replace")
-
+# Obtener los argumentos de la línea de comandos
 sku = str(sys.argv[1])
 desc = str(sys.argv[2])
-qty = str(sys.argv[3])
-extra = str(sys.argv[4])
+printer = str(sys.argv[3])
+qty = str(sys.argv[4])
+extra = str(sys.argv[5])
 
+# Configuración para la longitud del SKU y el código de barras
 sku_length = len(sku)
 barcode_width_length = 0.2 if sku_length <= 14 else 0.1
 
-barcode_shift = 5
+# Ajusta esta variable para mover el código de barras a la izquierda o derecha
+barcode_shift = 5  # Aumentar para mover a la derecha, disminuir para mover a la izquierda
 
-# Para centrar el código de barras en una etiqueta de 2x1 (50.8mm x 25.4mm)
-label_width = 50.8  # Ancho de la etiqueta en mm
-label_height = 25.4  # Alto de la etiqueta en mm
+barcode_start_cords_x = (4 if sku_length <= 14 else 15) + barcode_shift
 
-# Centramos el código de barras horizontalmente
-barcode_start_cords_x = (label_width - (sku_length * 0.2)) / 2
+# Crear una nueva etiqueta ZPL
+l = zpl.Label(50.8, 25.4)  # Tamaño de la etiqueta en milímetros
 
-l = zpl.Label(label_width, label_height)
-
-# Tamaño del texto
+# Configuración de la altura y anchura del texto y de la línea
 char_height = 2
 char_width = 1.2
 line_width = 35
 
-# Envolvemos la descripción para que no se salga de la etiqueta
-wrapped_desc = textwrap.wrap(desc, width=30)
-
-# Posición inicial de la descripción, dejando espacio para el código de barras
-start_y = 12  # Dejamos un pequeño espacio debajo del código de barras para la descripción
-
-# Escribimos la descripción
-for i, line in enumerate(wrapped_desc[:3]):
-    l.origin(2, start_y + (i * 3))  # Colocamos el texto empezando desde `start_y`
+# Escribir la descripción en la etiqueta en múltiples líneas
+lines_of_desc = [desc[i:i+50] for i in range(0, len(desc), 50)]
+start_y = 10
+for i, line in enumerate(lines_of_desc[:3]):  # Limitar a 3 líneas para un máximo de 150 caracteres
+    l.origin(2, start_y + (i * 3))
     l.write_text(line, char_height=char_height, char_width=char_width, line_width=line_width)
     l.endorigin()
 
-# Si hay texto extra, lo agregamos debajo de la descripción
+# Escribir texto extra si existe
 if extra:
-    l.origin(2, start_y + (len(wrapped_desc) * 3) + 3)  # Ajustamos la posición de `extra` debajo de la descripción
+    l.origin(2, start_y + 9)  # Ajusta la posición Y según sea necesario
     l.write_text(extra[:50], char_height=2, char_width=1.2, line_width=40)
     l.endorigin()
 
-# Código de barras en el centro de la etiqueta (parte superior)
-l.origin(barcode_start_cords_x, 2)  # Centrado horizontalmente
+# Escribir el código de barras y el SKU
+l.origin(barcode_start_cords_x - (sku_length / 2), 2)
 l.barcode_field_default(module_width=barcode_width_length, bar_width_ratio=2, height=0.9)
-l.barcode(height=50, barcode_type='C', code=sku, check_digit='N')
+l.write_barcode(height=50, barcode_type='C', check_digit='N')
 l.write_text(sku)
 l.endorigin()
 
-# Generar la salida ZPL
+# Finalizar la etiqueta ZPL y agregar la cantidad de impresiones
 zpl_output = l.dumpZPL()[:-3]
 zpl_output += "^PQ" + qty + ",0,1,Y^XZ"
+
+# Crear un archivo con la etiqueta ZPL
+file_name = str(uuid.uuid1()) + ".txt"
+with open(file_name, "w+") as f:
+    f.write(zpl_output)
+
+# Enviar la etiqueta ZPL a la impresora
+os.system("lp -d " + printer + " -o raw " + file_name + "")
+
+# Eliminar el archivo temporal
+os.remove(file_name)
 
 print(zpl_output)
