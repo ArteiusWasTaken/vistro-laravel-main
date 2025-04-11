@@ -3,51 +3,65 @@ import os
 import zpl
 import uuid
 import textwrap
+import unicodedata
 
-sku = str(sys.argv[1])
-desc = str(sys.argv[2])
+def clean_text(text):
+    return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+
+
+sku = clean_text(str(sys.argv[1]))
+desc = clean_text(str(sys.argv[2]))
 serie = str(sys.argv[3])
 qty = str(sys.argv[4])
-extra = str(sys.argv[5])
+extra = clean_text(str(sys.argv[5]))
+
+# Escala para impresoras de 300 dpi
+DPI_SCALE = 300 / 203
 
 sku_length = len(sku)
 serie_length = len(serie)
 
-barcode_width_length = 0.2 if sku_length <= 10 else 0.1
-barcode_start_cords_x = 5 if sku_length <= 12 else 12
+# Ajustar el ancho de los códigos de barras para reducir el espacio horizontal
+barcode_width_length = 0.12 * DPI_SCALE if sku_length <= 10 else 0.099 * DPI_SCALE  # Ancho del código de barras
+barcode_start_cords_x = 7 * DPI_SCALE if sku_length <= 12 else 7 * DPI_SCALE
 
-serie_width_length = 0.2 if serie_length <= 10 else 0.1
-serie_start_cords_x = 5 if serie_length <= 12 else 10
+serie_width_length = 0.12 * DPI_SCALE if serie_length <= 10 else 0.1 * DPI_SCALE  # Ancho del código de barras
+serie_start_cords_x = 5 * DPI_SCALE if serie_length <= 12 else 6 * DPI_SCALE
 
-l = zpl.Label(50.8, 25.4, dpmm=12)
+# Crear la etiqueta con tamaño ajustado para 300 dpi
+l = zpl.Label(50.8 * DPI_SCALE, 25.4 * DPI_SCALE)
 
-wrapped_desc = textwrap.wrap(desc, width=30)
+# Ajustar el texto
+wrapped_desc = textwrap.wrap(desc, width=40)
 
-start_y = 2
-for i, line in enumerate(wrapped_desc[:3]):
-    l.origin(5, start_y + (i * 3))
-    l.write_text(line, char_height=1.5, char_width=1, line_width=30, justification='L')
+start_y = 2 * DPI_SCALE  # Ajuste en Y
+for i, line in enumerate(wrapped_desc[:2]):
+    l.origin(int(5 * DPI_SCALE), int(start_y + (i * 3 * DPI_SCALE)))
+    l.write_text(line, char_height=1.5 * DPI_SCALE, char_width=1 * DPI_SCALE, line_width=30 * DPI_SCALE, justification='L')
     l.endorigin()
 
-l.origin(barcode_start_cords_x - (sku_length / 2), 7)
-l.barcode_field_default(module_width=barcode_width_length, bar_width_ratio=2, height=0.9)
-l.barcode(height=25, barcode_type='C', code=sku, check_digit='N')  # Se agregó 'code'
+# Ajustar código de barras y texto
+l.origin(int(barcode_start_cords_x - (sku_length / 2) * DPI_SCALE), int(7 * DPI_SCALE))
+l.barcode_field_default(module_width=barcode_width_length, bar_width_ratio=2, height=25 * DPI_SCALE)
+l.barcode(height=int(25 * DPI_SCALE), barcode_type='C', code=sku, check_digit='N')
 l.write_text(sku)
 l.endorigin()
 
-l.origin(serie_start_cords_x - (sku_length / 2), 12)
-l.barcode_field_default(module_width=serie_width_length, bar_width_ratio=2, height=0.9)
-l.barcode(height=25, barcode_type='C', code=serie, check_digit='N')  # Se agregó 'code'
+# Ajuste para el código de barras del serie
+l.origin(int(serie_start_cords_x - (serie_length / 2) * DPI_SCALE if serie_length <= 12 else 0.1 * DPI_SCALE ), int(12 * DPI_SCALE))
+l.barcode_field_default(module_width=serie_width_length, bar_width_ratio=2, height=25 * DPI_SCALE)
+l.barcode(height=int(30 * DPI_SCALE), barcode_type='C', code=serie, check_digit='N')
 l.write_text(serie)
 l.endorigin()
 
+# Si hay extra, ajustar tamaño y posición
 if extra != "":
-    l.origin(2, 14)
-    l.write_text(extra[:50], char_height=2, char_width=1.2, line_width=40)
+    l.origin(int(2 * DPI_SCALE), int(14 * DPI_SCALE))
+    l.write_text(extra[:50], char_height=2 * DPI_SCALE, char_width=1.2 * DPI_SCALE, line_width=40 * DPI_SCALE)
     l.endorigin()
 
+# Generar el código ZPL final con cantidad ajustada
 zpl_code = l.dumpZPL()[:-3]
 zpl_code += "^PQ" + qty + ",0,1,Y^XZ"
 
 print(zpl_code)
-

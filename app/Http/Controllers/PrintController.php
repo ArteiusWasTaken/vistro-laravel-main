@@ -21,6 +21,7 @@ class PrintController extends Controller
      */
     public function etiquetas(Request $request): JsonResponse
     {
+        $output = '';
         $tipo = $request->input('tipo');
         $data = json_decode($request->input('data'));
 
@@ -48,13 +49,13 @@ class PrintController extends Controller
 
                 $output = trim(shell_exec($command));
 
-                $socket = fsockopen($ip, $port, $errno, $errstr, 5);
-                if (!$socket) {
-                    throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
-                }
-
-                fwrite($socket, $output);
-                fclose($socket);
+//                $socket = fsockopen($ip, $port, $errno, $errstr, 5);
+//                if (!$socket) {
+//                    throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
+//                }
+//
+//                fwrite($socket, $output);
+//                fclose($socket);
 
             } catch (Exception $e) {
                 ErrorLoggerService::log(
@@ -331,59 +332,65 @@ class PrintController extends Controller
         return ('<br>' . $sis . $ini . $trace['line'] . $fin);
     }
 
-    public function etiquetasSerie(Request $request)
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function etiquetasSerie(Request $request): JsonResponse
     {
-        $data = json_decode($request->input("data"));
+        $output = '';
+        $data = json_decode($request->input('data'));
         $etiquetas = [];
-        $cantidad = (int) explode(".", $data->cantidad)[0];
+        $cantidad = (int)explode('.', $data->cantidad)[0];
 
         $impresora = DB::table('impresora')->where('id', $data->impresora)->first();
         if (!$impresora) {
             return response()->json([
-                "code" => 500,
-                "message" => "No se encontró la impresora proporcionada " . self::logLocation()
+                'code' => 500,
+                'message' => 'No se encontró la impresora proporcionada ' . self::logLocation()
             ]);
         }
 
-        $modelo = DB::table("modelo")
-            ->select("id", "consecutivo", "descripcion")
-            ->where("sku", $data->codigo)
+        $modelo = DB::table('modelo')
+            ->select('id', 'consecutivo', 'descripcion')
+            ->where('sku', $data->codigo)
             ->first();
 
         if (!$modelo) {
-            $modelo = DB::table("modelo_sinonimo")
-                ->join("modelo", "modelo_sinonimo.id_modelo", "=", "modelo.id")
-                ->select("modelo.id", "modelo.consecutivo", "modelo.descripcion")
-                ->where("modelo_sinonimo.codigo", trim($data->codigo))
+            $modelo = DB::table('modelo_sinonimo')
+                ->join('modelo', 'modelo_sinonimo.id_modelo', '=', 'modelo.id')
+                ->select('modelo.id', 'modelo.consecutivo', 'modelo.descripcion')
+                ->where('modelo_sinonimo.codigo', trim($data->codigo))
                 ->first();
 
             if (!$modelo) {
                 return response()->json([
-                    "code" => 500,
-                    "message" => "El código proporcionado no existe en la base de datos, favor de contactar a un administrador " . self::logLocation()
+                    'code' => 500,
+                    'message' => 'El código proporcionado no existe en la base de datos, contactar a un administrador '
+                        . self::logLocation()
                 ]);
             }
         }
 
-        $fecha = date("mY");
-        $prefijo = str_pad(substr($modelo->id, -5), 5, "0", STR_PAD_LEFT);
+        $fecha = date('mY');
+        $prefijo = str_pad(substr($modelo->id, -5), 5, '0', STR_PAD_LEFT);
         $consecutivo_base = (int)$modelo->consecutivo;
 
         for ($i = 0; $i < $cantidad; $i++) {
             $consecutivo = $consecutivo_base + $i + 1;
-            $sufijo = str_pad($consecutivo, 6, "0", STR_PAD_LEFT);
+            $sufijo = str_pad($consecutivo, 6, '0', STR_PAD_LEFT);
 
             $etiquetas[] = (object)[
                 'serie' => $prefijo . $fecha . $sufijo,
                 'codigo' => $data->codigo,
                 'descripcion' => $modelo->descripcion,
                 'cantidad' => 1,
-                'extra' => property_exists($data, "extra") ? $data->extra : ""
+                'extra' => property_exists($data, 'extra') ? $data->extra : ''
             ];
         }
 
         $nuevo_consecutivo = ($consecutivo_base + $cantidad >= 800000) ? 1 : ($consecutivo_base + $cantidad);
-        DB::table("modelo")->where("id", $modelo->id)->update(["consecutivo" => $nuevo_consecutivo]);
+        DB::table('modelo')->where('id', $modelo->id)->update(['consecutivo' => $nuevo_consecutivo]);
 
         foreach ($etiquetas as $etiqueta) {
             try {
