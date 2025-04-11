@@ -19,7 +19,7 @@ barcode_start_cords_x = 5 if sku_length <= 12 else 12
 serie_width_length = 0.2 if serie_length <= 10 else 0.1
 serie_start_cords_x = 5 if serie_length <= 12 else 10
 
-l = zpl.Label(50.8, 25.4)
+l = zpl.Label(50.8, 25.4, dpmm=12)
 
 wrapped_desc = textwrap.wrap(desc, width=30)
 
