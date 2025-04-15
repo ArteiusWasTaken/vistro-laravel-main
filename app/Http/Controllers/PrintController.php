@@ -49,13 +49,13 @@ class PrintController extends Controller
 
                 $output = trim(shell_exec($command));
 
-//                $socket = fsockopen($ip, $port, $errno, $errstr, 5);
-//                if (!$socket) {
-//                    throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
-//                }
-//
-//                fwrite($socket, $output);
-//                fclose($socket);
+                $socket = fsockopen($ip, $port, $errno, $errstr, 5);
+                if (!$socket) {
+                    throw new Exception("No se pudo conectar a la impresora: $errstr ($errno)");
+                }
+
+                fwrite($socket, $output);
+                fclose($socket);
 
             } catch (Exception $e) {
                 ErrorLoggerService::log(
