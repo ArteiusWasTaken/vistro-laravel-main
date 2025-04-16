@@ -2,9 +2,8 @@
 
     namespace App\Console\Commands;
 
-    use Exception;
+    use App\Services\PickingService;
     use Illuminate\Console\Command;
-    use Illuminate\Support\Facades\Http;
 
     class PickingTask extends Command
     {
@@ -22,20 +21,24 @@
          */
         protected $description = 'Llama a la función picking del API';
 
+        protected PickingService $pickingService;
+
+        public function __construct(PickingService $pickingService)
+        {
+            parent::__construct();
+            $this->pickingService = $pickingService;
+        }
         /**
          * Execute the console command.
-         * @noinspection HttpUrlsUsage
          */
         public function handle(): int
         {
-            $url = 'http://psafa-test.ddns.net:2221/api/dev/picking';
-
             try {
-                $response = Http::get($url);
+                $resultado = $this->pickingService->rawinfo_picking();
 
-                $this->info('Respuesta: ' . $response->body());
-            } catch (Exception $e) {
-                $this->error('Error al ejecutar picking: ' . $e->getMessage());
+                $this->info('Resultado: ' . $resultado);
+            } catch (\Exception $e) {
+                $this->error('Error ejecutando picking: ' . $e->getMessage());
             }
 
             return 0;
