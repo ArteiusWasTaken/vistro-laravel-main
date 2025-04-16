@@ -2,39 +2,38 @@ import sys
 import os
 import zpl
 import uuid
-import json
+import textwrap
+import unicodedata
 
-# Obtener los argumentos de la línea de comandos
-sku = str(sys.argv[1])
-desc = str(sys.argv[2])
+# Normalizar texto (eliminar acentos, etc.)
+def clean_text(text):
+    return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+
+# Argumentos de entrada
+sku = clean_text(str(sys.argv[1]))
+desc = clean_text(str(sys.argv[2]))
 qty = str(sys.argv[3])
-extra = str(sys.argv[4])
+extra = clean_text(str(sys.argv[4]))
 
-# Configuración para la longitud del SKU y el código de barras
+# Escala para impresoras de 300 DPI
+DPI_SCALE = 300 / 203
+
 sku_length = len(sku)
-barcode_width_length = 0.2 if sku_length <= 12 else 0.1
 
-# Ajusta esta variable para mover el código de barras a la izquierda o derecha
-barcode_shift = 0  # Aumentar para mover a la derecha, disminuir para mover a la izquierda
+# Ajustar ancho del código de barras basado en largo del SKU
+barcode_width_length = 0.12 * DPI_SCALE if sku_length <= 12 else 0.099 * DPI_SCALE
+barcode_start_cords_x = (6 if sku_length <= 14 else 13) * DPI_SCALE
 
-barcode_start_cords_x = (6 if sku_length <= 14 else 13) + barcode_shift
+# Crear etiqueta
+l = zpl.Label(50.8 * DPI_SCALE, 25.4 * DPI_SCALE)
 
-# Crear una nueva etiqueta ZPL
-l = zpl.Label(50.8, 25.4)  # Tamaño de la etiqueta en milímetros
-
-# Configuración de la altura y anchura del texto y de la línea
-char_height = 2
-char_width = 1.1
-line_width = 35
-
-# Función para dividir la descripción sin cortar palabras
+# Función para dividir descripción sin cortar palabras
 def split_text_without_cutting_words(text, max_length):
     words = text.split()
     lines = []
     current_line = ""
 
     for word in words:
-        # Si agregar la palabra excede el máximo, la colocamos en una nueva línea
         if len(current_line) + len(word) + 1 > max_length:
             lines.append(current_line)
             current_line = word
@@ -43,43 +42,34 @@ def split_text_without_cutting_words(text, max_length):
                 current_line += " "
             current_line += word
 
-    # Añadir la última línea
     if current_line:
         lines.append(current_line)
 
     return lines
 
-# Escribir la descripción en la etiqueta en múltiples líneas sin cortar palabras
-lines_of_desc = split_text_without_cutting_words(desc, 50)[:3]  # Limitar a 3 líneas para un máximo de 150 caracteres
-start_y = 10
+# Escribir descripción
+lines_of_desc = split_text_without_cutting_words(desc, 50)[:3]
+start_y = 10 * DPI_SCALE
 for i, line in enumerate(lines_of_desc):
-    l.origin(2, start_y + (i * 3))
-    l.write_text(line, char_height=char_height, char_width=char_width, line_width=line_width)
+    l.origin(int(2 * DPI_SCALE), int(start_y + (i * 3 * DPI_SCALE)))
+    l.write_text(line, char_height=2 * DPI_SCALE, char_width=1.1 * DPI_SCALE, line_width=35 * DPI_SCALE)
     l.endorigin()
 
-# Escribir texto extra si existe
+# Escribir extra si existe
 if extra:
-    l.origin(2, start_y + 9)  # Ajusta la posición Y según sea necesario
-    l.write_text(extra[:50], char_height=2, char_width=1.2, line_width=40)
+    l.origin(int(2 * DPI_SCALE), int(start_y + 9 * DPI_SCALE))
+    l.write_text(extra[:50], char_height=2 * DPI_SCALE, char_width=1.2 * DPI_SCALE, line_width=40 * DPI_SCALE)
     l.endorigin()
 
-# Escribir el código de barras y el SKU
-l.origin(barcode_start_cords_x - (sku_length / 2), 2)
-l.barcode_field_default(module_width=barcode_width_length, bar_width_ratio=2, height=50)
-l.barcode('C', '12345678987654321', height=50, check_digit='N')
+# Código de barras
+l.origin(int(barcode_start_cords_x - (sku_length / 2) * DPI_SCALE), int(2 * DPI_SCALE))
+l.barcode_field_default(module_width=barcode_width_length, bar_width_ratio=2, height=50 * DPI_SCALE)
+l.barcode(barcode_type='C', code=sku, height=int(50 * DPI_SCALE), check_digit='N')
 l.write_text(sku)
 l.endorigin()
 
-# Finalizar la etiqueta ZPL y agregar la cantidad de impresiones
+# Generar ZPL final
 zpl_output = l.dumpZPL()[:-3]
 zpl_output += "^PQ" + qty + ",0,1,Y^XZ"
-
-# Crear un archivo con la etiqueta ZPL
-file_name = str(uuid.uuid1()) + ".txt"
-with open(file_name, "w+") as f:
-    f.write(zpl_output)
-
-# Eliminar el archivo temporal
-os.remove(file_name)
 
 print(zpl_output)
