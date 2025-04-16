@@ -47,5 +47,5 @@ f.close()
 
 os.remove(file_name)
 
-print(zpl_output)
+print(zpl)
 
