@@ -6,9 +6,8 @@ import json
 
 sku = str(sys.argv[1])
 desc = str(sys.argv[2])
-printer = str(sys.argv[3])
-qty = str(sys.argv[4])
-extra = str(sys.argv[5])
+qty = str(sys.argv[3])
+extra = str(sys.argv[4])
 
 sku_length = len(str(sku))
 barcode_width_length = 0.7 if sku_length <= 14 else 0.5
@@ -44,7 +43,7 @@ file_name = str(uuid.uuid1()) + ".txt";
 f = open(file_name, "w+")
 f.write(zpl);
 f.close()
- 
+
 os.system("lp -d " + printer + " -o raw " + file_name + "")
 
 os.remove(file_name)

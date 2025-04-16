@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Services\ErrorLoggerService;
 use Exception;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
 use Mike42\Escpos\Printer;
@@ -286,9 +289,9 @@ class PrintController extends Controller
     }
 
     /**
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response|\Illuminate\Foundation\Application
+     * @return ResponseFactory|Response|Application
      */
-    public function keepAlive(): \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response|\Illuminate\Foundation\Application
+    public function keepAlive(): ResponseFactory|Response|Application
     {
         $ips = DB::table('impresora')
             ->pluck('ip')
