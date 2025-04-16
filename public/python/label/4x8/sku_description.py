@@ -30,7 +30,8 @@ if extra != "":
 
 l.origin(barcode_start_cords_x - (sku_length / 2), 8)
 l.barcode_field_default(module_width=barcode_width_length, bar_width_ratio=8, height=3.6)
-l.write_barcode(height=200, barcode_type='C', check_digit='N', orientation='B')
+#l.write_barcode(height=200, barcode_type='C', check_digit='N', orientation='B')
+l.barcode('C', '12345678987654321', height=200, check_digit='N', orientation='B')
 l.write_text(sku)
 l.endorigin()
 
