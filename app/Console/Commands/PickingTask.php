@@ -2,6 +2,7 @@
 
     namespace App\Console\Commands;
 
+    use Exception;
     use Illuminate\Console\Command;
     use Illuminate\Support\Facades\Http;
 
@@ -23,16 +24,17 @@
 
         /**
          * Execute the console command.
+         * @noinspection HttpUrlsUsage
          */
         public function handle(): int
         {
-            $url = 'http://localhost:8001/api/dev/picking';
+            $url = 'http://psafa-test.ddns.net:2221/api/dev/picking';
 
             try {
                 $response = Http::get($url);
 
                 $this->info('Respuesta: ' . $response->body());
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->error('Error al ejecutar picking: ' . $e->getMessage());
             }
 
