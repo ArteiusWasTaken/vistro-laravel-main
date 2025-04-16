@@ -286,9 +286,9 @@ class PrintController extends Controller
     }
 
     /**
-     * @return void
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response|\Illuminate\Foundation\Application
      */
-    public function keepAlive(): void
+    public function keepAlive(): \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response|\Illuminate\Foundation\Application
     {
         $ips = DB::table('impresora')
             ->pluck('ip')
@@ -307,6 +307,7 @@ class PrintController extends Controller
 
                 fwrite($socket, trim(mb_convert_encoding($output, 'UTF-8', 'auto')));
                 fclose($socket);
+
             } catch (Exception $e) {
                 ErrorLoggerService::log(
                     'Error en Keep Alive. Impresora: ' . $ip,
@@ -318,6 +319,7 @@ class PrintController extends Controller
                 );
             }
         }
+        return response('Keep Alive enviado Correctamente');
     }
 
     /**
