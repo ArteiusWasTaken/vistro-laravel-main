@@ -294,6 +294,7 @@ class PrintController extends Controller
     public function keepAlive(): ResponseFactory|Response|Application
     {
         $ips = DB::table('impresora')
+            ->where('tipo', 1)
             ->pluck('ip')
             ->toArray();
 
