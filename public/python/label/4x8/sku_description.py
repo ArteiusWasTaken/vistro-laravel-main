@@ -45,6 +45,7 @@ f = open(file_name, "w+")
 f.write(zpl);
 f.close()
 
-os.system("lp -d " + printer + " -o raw " + file_name + "")
-
 os.remove(file_name)
+
+print(zpl_output)
+
