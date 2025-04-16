@@ -12,6 +12,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
 use Mike42\Escpos\Printer;
+use stdClass;
 
 /**
  *
@@ -259,12 +260,6 @@ class PrintController extends Controller
         }
     }
 
-    public function picking()
-    {
-
-    }
-
-
     /**
      * @return JsonResponse
      */
@@ -430,5 +425,278 @@ class PrintController extends Controller
         }
         return response()->json([$output]);
     }
+
+    public function rawinfo_picking(): JsonResponse
+    {
+        $servidores = DB::table('documento')
+            ->join('marketplace_area', 'documento.id_marketplace_area', '=', 'marketplace_area.id')
+            ->join('empresa_almacen', 'documento.id_almacen_principal_empresa', '=', 'empresa_almacen.id')
+            ->join('impresora', 'empresa_almacen.id_impresora_picking', '=', 'impresora.id')
+            ->where('documento.id_fase', 3)
+            ->where('documento.status', 1)
+            ->where('documento.id_tipo', 2)
+            ->where('documento.autorizado', 1)
+            ->where('documento.problema', 0)
+            ->where('documento.picking', 0)
+            ->whereYear('documento.created_at', date('Y'))
+            ->groupBy('impresora.servidor')
+            ->pluck('impresora.servidor')
+            ->toArray();
+
+        if (!empty($servidores)) {
+            foreach ($servidores as $servidor) {
+                $ventas = DB::table('documento')
+                    ->join('marketplace_area', 'documento.id_marketplace_area', '=', 'marketplace_area.id')
+                    ->join('empresa_almacen', 'documento.id_almacen_principal_empresa', '=', 'empresa_almacen.id')
+                    ->join('impresora', 'empresa_almacen.id_impresora_picking', '=', 'impresora.id')
+                    ->where('documento.id_fase', 3)
+                    ->where('documento.status', 1)
+                    ->where('documento.id_tipo', 2)
+                    ->where('documento.autorizado', 1)
+                    ->where('documento.problema', 0)
+                    ->where('documento.picking', 0)
+                    ->where('documento.packing_by', 0)
+                    ->whereYear('documento.created_at', date('Y'))
+                    ->where('impresora.servidor', $servidor)
+                    ->where(function ($query) {
+                        $query->where('marketplace_area.publico', '!=', 0)
+                            ->orWhere(function ($query) {
+                                $query->where('documento.pagado', '!=', 0)
+                                    ->orWhere('documento.id_periodo', '!=', 1);
+                            });
+                    })
+                    ->select(
+                        'documento.id',
+                        'documento.pagado',
+                        'documento.id_periodo',
+                        'documento.id_marketplace_area',
+                        'documento.documento_extra',
+                        'marketplace_area.publico',
+                        'impresora.ip'
+                    )
+                    ->groupBy('documento.id', 'documento.pagado', 'documento.id_periodo', 'documento.id_marketplace_area', 'documento.documento_extra', 'marketplace_area.publico', 'impresora.ip')
+                    ->orderBy('documento.created_at')
+                    ->limit(30)
+                    ->get()
+                    ->toArray();
+
+                if (!empty($ventas)) {
+                    foreach ($ventas as $index => $venta) {
+                        $movimientos = DB::table('movimiento')->where('id_documento', $venta->id)->first();
+
+                        if (empty($movimientos)) {
+                            DB::table('seguimiento')->insert([
+                                'id_documento' => $venta->id,
+                                'id_usuario' => 1,
+                                'seguimiento' => "PICKING: El pedido ha sido mandado a fase PEDIDO debido a que actualmente no contiene productos.
+                                Por favor, añada artículos para proceder con la siguiente fase del proceso."
+                            ]);
+
+                            DB::table('documento')->where('id', $venta->id)->update([
+                                'id_fase' => 1,
+                            ]);
+
+                            unset($ventas[$index]);
+
+                            $tiene_series = DB::table('movimiento_producto')
+                                ->join('movimiento', 'movimiento.id', '=', 'movimiento_producto.id_movimiento')
+                                ->join('producto', 'producto.id', '=', 'movimiento_producto.id_producto')
+                                ->where('movimiento.id_documento', $venta->id)
+                                ->select('producto.*')
+                                ->get();
+
+                            if (empty($tiene_series)) {
+                                self::eliminarSeries($venta->id);
+                            }
+                        }
+                    }
+
+                    if (empty($ventas)) continue;
+
+                    try {
+                        self::picking($ventas);
+                    } catch (Exception $e) {
+                        ErrorLoggerService::log(
+                            'No fue posible imprimir los picking del servidor: ' . $servidor,
+                            'PrintController',
+                            [
+                                'exception' => $e->getMessage(),
+                                'line' => self::logLocation()
+                            ]
+                        );
+                    }
+                }
+            }
+        }
+        return response()->json([
+            'Respuesta' => 'Imprimir picking Finalizado'
+        ]);
+    }
+
+    private static function picking($documentos): void
+    {
+        foreach ($documentos as $documento) {
+            $seguimiento = array();
+
+            $info = DB::table('documento')
+                ->join('empresa_almacen', 'documento.id_almacen_principal_empresa', '=', 'empresa_almacen.id')
+                ->join('empresa', 'empresa_almacen.id_empresa', '=', 'empresa.id')
+                ->join('almacen', 'empresa_almacen.id_almacen', '=', 'almacen.id')
+                ->join('marketplace_area', 'documento.id_marketplace_area', '=', 'marketplace_area.id')
+                ->join('area', 'marketplace_area.id_area', '=', 'area.id')
+                ->join('marketplace', 'marketplace_area.id_marketplace', '=', 'marketplace.id')
+                ->where('documento.status', 1)
+                ->where('documento.id_fase', 3)
+                ->where('documento.picking', 0)
+                ->where('documento.id', $documento->id)
+                ->select(
+                    'area.area',
+                    'documento.id',
+                    'marketplace.marketplace',
+                    'empresa.empresa',
+                    'almacen.almacen'
+                )
+                ->first();
+            if (empty($info)) {
+                ErrorLoggerService::log(
+                    'No se encontro informacion del documento solicitado ' . $documento->id,
+                    'PrintController',
+                    [
+                        'exception' => 'Errors',
+                        'line' => self::logLocation()
+                    ]
+                );
+                continue;
+            }
+
+            $productos = DB::table('movimiento')
+                ->join('modelo', 'movimiento.id_modelo', '=', 'modelo.id')
+                ->where('movimiento.id_documento', $documento->id)
+                ->select(
+                    'modelo.sku',
+                    'modelo.descripcion',
+                    'movimiento.cantidad'
+                )
+                ->get()
+                ->toArray();
+
+            if (empty($productos)) {
+                ErrorLoggerService::log(
+                    'El documento solicitado ' . $documento->id . 'no contiene productos.',
+                    'PrintController',
+                    [
+                        'exception' => 'Errors',
+                        'line' => self::logLocation()
+                    ]
+                );
+
+                DB::table('seguimiento')->insert([
+                    'id_documento' => $documento->id,
+                    'id_usuario' => 1,
+                    'seguimiento' => "Pedido mandado a fase pedido por falta de información en los productos."
+                ]);
+
+                DB::table('documento')->where(['id' => $documento->id])->update([
+                    'id_fase' => 1,
+                ]);
+
+                continue;
+            }
+
+            $seguimientos = DB::table('seguimiento')
+                ->join('usuario', 'seguimiento.id_usuario', '=', 'usuario.id')
+                ->where('seguimiento.id_documento', $documento->id)
+                ->select('seguimiento.*', 'usuario.nombre')
+                ->orderBy('seguimiento.created_at', 'desc')
+                ->limit(2)
+                ->get()
+                ->toArray();
+
+            if (count($seguimientos) > 0) {
+                foreach ($seguimientos as $seguimientoo) {
+                    $seguimiento_data = new stdClass();
+                    $re = '/\b(\w)\S*\s*/m';
+                    $subst = '$1';
+                    $seguimiento_data->usuario = preg_replace($re, $subst, $seguimientoo->nombre) . " (" . $seguimientoo->created_at . ")";
+                    $seguimiento_data->seguimiento = strip_tags($seguimientoo->seguimiento);
+
+                    $seguimiento[] = $seguimiento_data;
+                }
+            }
+
+            $output = shell_exec("python3 python/picking.py '" . $documento->ip . "' '" . json_encode($info) . "' '" . json_encode($productos) . "' '" . json_encode($seguimiento) . "' 2>&1");
+
+            if (str_contains($output, 'Error')) {
+
+                ErrorLoggerService::log(
+                    'No fue posible imprimir la etiqueta del documento ' . $documento->id ,
+                    'PrintController',
+                    [
+                        'exception' => $output,
+                        'line' => self::logLocation()
+                    ]
+                );
+
+                if (
+                    str_contains($output, "[Errno 113] No route to host") ||
+                    str_contains($output, "[Errno 107] Transport endpoint is not connected") ||
+                    str_contains($output, "Error: [Errno 9] Bad file descriptor") ||
+                    str_contains($output, "Exception ignored in: <function Escpos.__del__")
+                ) {
+
+                    DB::table('documento')->where('id', $documento["id"])->update([
+                        'picking' => 1
+                    ]);
+
+                    DB::table('seguimiento')->insert([
+                        'id_documento' => $documento["id"],
+                        'id_usuario' => 1,
+                        'seguimiento' => "Error al imprimir el picking."
+                    ]);
+                }
+
+                if (str_contains($output, "error al conectar con la impresora")) {
+                    break;
+                }
+
+                continue;
+            }
+
+            DB::table('documento')->where(['id' => $documento->id])->update([
+                'picking' => 1,
+                'picking_by' => 1,
+                'picking_date' => date('Y-m-d H:i:s')
+            ]);
+        }
+    }
+
+
+    private static function eliminarSeries($documento): void
+    {
+        $info = DB::table('documento')->where('id', $documento)->first();
+
+        if (!empty($info)) {
+            if ($info->id_fase != 3) {
+                DB::table('documento')->where('id', $documento)->update(['id_fase' => 3]);
+            }
+        }
+
+        $movimientos = DB::table('movimiento')->where('id_documento', $documento)->get();
+
+        if (!empty($movimientos)) {
+            foreach ($movimientos as $movimiento) {
+                $mov_produ = DB::table('movimiento_producto')->where('id_movimiento', $movimiento->id)->get();
+
+                if (!empty($mov_produ)) {
+                    foreach ($mov_produ as $mov) {
+                        DB::table('producto')->where('id', $mov->id_producto)->update(['status' => 1]);
+
+                        DB::table('movimiento_producto')->where('id', $mov->id)->delete();
+                    }
+                }
+            }
+        }
+    }
+
 
 }
