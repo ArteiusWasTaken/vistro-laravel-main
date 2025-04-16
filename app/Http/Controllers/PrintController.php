@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\ErrorLoggerService;
+use DateTime;
+use DateTimeZone;
 use Exception;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Foundation\Application;
@@ -11,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Mike42\Escpos\PrintConnectors\FilePrintConnector;
+use Mike42\Escpos\PrintConnectors\NetworkPrintConnector;
 use Mike42\Escpos\Printer;
 use stdClass;
 
@@ -79,7 +82,20 @@ class PrintController extends Controller
     }
 
     /**
+     * @return string
+     */
+    private static function logLocation(): string
+    {
+        $sis = 'BE'; // Front o Back
+        $ini = 'PC'; // Primera letra del Controlador y Letra de la seguna Palabra: Controller, service
+        $fin = 'INT'; // Últimas 3 letras del primer nombre del archivo *comPRAcontroller
+        $trace = debug_backtrace()[0];
+        return ('<br>' . $sis . $ini . $trace['line'] . $fin);
+    }
+
+    /**
      * @return JsonResponse
+     * @noinspection PhpUnused
      */
     public function tickets(): JsonResponse
     {
@@ -186,6 +202,7 @@ class PrintController extends Controller
     /**
      * @param $barcode
      * @return JsonResponse
+     * @noinspection PhpUnused
      */
     public function tickets_usb($barcode): JsonResponse
     {
@@ -262,6 +279,7 @@ class PrintController extends Controller
 
     /**
      * @return JsonResponse
+     * @noinspection PhpUnused
      */
     public function etiquetasData(): JsonResponse
     {
@@ -319,18 +337,6 @@ class PrintController extends Controller
             }
         }
         return response('Keep Alive enviado Correctamente');
-    }
-
-    /**
-     * @return string
-     */
-    private static function logLocation(): string
-    {
-        $sis = 'BE'; // Front o Back
-        $ini = 'PC'; // Primera letra del Controlador y Letra de la seguna Palabra: Controller, service
-        $fin = 'INT'; // Últimas 3 letras del primer nombre del archivo *comPRAcontroller
-        $trace = debug_backtrace()[0];
-        return ('<br>' . $sis . $ini . $trace['line'] . $fin);
     }
 
     /**
@@ -481,6 +487,7 @@ class PrintController extends Controller
                     ->toArray();
 
                 if (!empty($ventas)) {
+
                     foreach ($ventas as $index => $venta) {
                         $movimientos = DB::table('movimiento')->where('id_documento', $venta->id)->first();
 
@@ -511,7 +518,7 @@ class PrintController extends Controller
                         }
                     }
 
-                    if (empty($ventas)) continue;
+                    if (empty($venta)) continue;
 
                     try {
                         self::picking($ventas);
@@ -531,6 +538,33 @@ class PrintController extends Controller
         return response()->json([
             'Respuesta' => 'Imprimir picking Finalizado'
         ]);
+    }
+
+    private static function eliminarSeries($documento): void
+    {
+        $info = DB::table('documento')->where('id', $documento)->first();
+
+        if (!empty($info)) {
+            if ($info->id_fase != 3) {
+                DB::table('documento')->where('id', $documento)->update(['id_fase' => 3]);
+            }
+        }
+
+        $movimientos = DB::table('movimiento')->where('id_documento', $documento)->get();
+
+        if (!empty($movimientos)) {
+            foreach ($movimientos as $movimiento) {
+                $mov_produ = DB::table('movimiento_producto')->where('id_movimiento', $movimiento->id)->get();
+
+                if (!empty($mov_produ)) {
+                    foreach ($mov_produ as $mov) {
+                        DB::table('producto')->where('id', $mov->id_producto)->update(['status' => 1]);
+
+                        DB::table('movimiento_producto')->where('id', $mov->id)->delete();
+                    }
+                }
+            }
+        }
     }
 
     private static function picking($documentos): void
@@ -624,26 +658,76 @@ class PrintController extends Controller
                 }
             }
 
-            $output = shell_exec("python3 python/picking.py '" . $documento->ip . "' '" . json_encode($info) . "' '" . json_encode($productos) . "' '" . json_encode($seguimiento) . "' 2>&1");
+            try {
+                $connector = new NetworkPrintConnector($documento->ip, 9100);
+                $printer = new Printer($connector);
 
-            if (str_contains($output, 'Error')) {
+                $date = (new DateTime('now', new DateTimeZone('America/Mexico_City')))->format('Y-m-d H:i:s');
+
+                $printer->setJustification(Printer::JUSTIFY_CENTER);
+                $printer->feed(2);
+                $printer->barcode($info->id);
+                $printer->feed();
+
+                $printer->setJustification();
+                $printer->text($info->area . " / " . $info->marketplace . "\n");
+                $printer->text($info->empresa . " / " . $info->almacen . "\n\n");
+
+                $printer->text("Productos\n");
+                $printer->text(str_repeat("-", 48) . "\n");
+
+                foreach ($productos as $producto) {
+                    $printer->text($producto->sku . "\n");
+                    $printer->text($producto->descripcion . "\n");
+
+                    $printer->setTextSize(2, 2);
+                    $printer->text($producto->cantidad . "\n");
+                    $printer->setTextSize(1, 1);
+
+                    $printer->text(str_repeat("-", 48) . "\n");
+                }
+
+                $printer->feed(2);
+                $printer->text("Último seguimiento\n");
+                $printer->text(str_repeat("-", 48) . "\n");
+
+                foreach ($seguimiento as $s) {
+                    $printer->text($s->usuario . "\n");
+                    $printer->text($s->seguimiento . "\n");
+                    $printer->text(str_repeat("-", 48) . "\n");
+                }
+
+                $printer->feed(2);
+                $printer->setJustification(Printer::JUSTIFY_CENTER);
+                $printer->text($date . "\n\n");
+
+                $printer->cut();
+                $printer->close();
+
+                DB::table('documento')->where(['id' => $documento->id])->update([
+                    'picking' => 1,
+                    'picking_by' => 1,
+                    'picking_date' => date('Y-m-d H:i:s')
+                ]);
+
+            } catch (Exception $e) {
+                $errorMsg = $e->getMessage();
 
                 ErrorLoggerService::log(
-                    'No fue posible imprimir la etiqueta del documento ' . $documento->id ,
+                    'No fue posible imprimir la etiqueta del documento ' . $documento->id,
                     'PrintController',
                     [
-                        'exception' => $output,
+                        'exception' => $errorMsg,
                         'line' => self::logLocation()
                     ]
                 );
 
                 if (
-                    str_contains($output, "[Errno 113] No route to host") ||
-                    str_contains($output, "[Errno 107] Transport endpoint is not connected") ||
-                    str_contains($output, "Error: [Errno 9] Bad file descriptor") ||
-                    str_contains($output, "Exception ignored in: <function Escpos.__del__")
+                    str_contains($errorMsg, "No route to host") ||
+                    str_contains($errorMsg, "Transport endpoint is not connected") ||
+                    str_contains($errorMsg, "Bad file descriptor") ||
+                    str_contains($errorMsg, "Failed to write")
                 ) {
-
                     DB::table('documento')->where('id', $documento["id"])->update([
                         'picking' => 1
                     ]);
@@ -655,46 +739,13 @@ class PrintController extends Controller
                     ]);
                 }
 
-                if (str_contains($output, "error al conectar con la impresora")) {
+                if (str_contains($errorMsg, "error al conectar con la impresora")) {
                     break;
                 }
 
                 continue;
             }
 
-            DB::table('documento')->where(['id' => $documento->id])->update([
-                'picking' => 1,
-                'picking_by' => 1,
-                'picking_date' => date('Y-m-d H:i:s')
-            ]);
-        }
-    }
-
-
-    private static function eliminarSeries($documento): void
-    {
-        $info = DB::table('documento')->where('id', $documento)->first();
-
-        if (!empty($info)) {
-            if ($info->id_fase != 3) {
-                DB::table('documento')->where('id', $documento)->update(['id_fase' => 3]);
-            }
-        }
-
-        $movimientos = DB::table('movimiento')->where('id_documento', $documento)->get();
-
-        if (!empty($movimientos)) {
-            foreach ($movimientos as $movimiento) {
-                $mov_produ = DB::table('movimiento_producto')->where('id_movimiento', $movimiento->id)->get();
-
-                if (!empty($mov_produ)) {
-                    foreach ($mov_produ as $mov) {
-                        DB::table('producto')->where('id', $mov->id_producto)->update(['status' => 1]);
-
-                        DB::table('movimiento_producto')->where('id', $mov->id)->delete();
-                    }
-                }
-            }
         }
     }
 
