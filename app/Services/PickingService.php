@@ -329,8 +329,8 @@ class PickingService
     private static function logLocation(): string
     {
         $sis = 'BE'; // Front o Back
-        $ini = 'PC'; // Primera letra del Controlador y Letra de la seguna Palabra: Controller, service
-        $fin = 'INT'; // Últimas 3 letras del primer nombre del archivo *comPRAcontroller
+        $ini = 'PS'; // Primera letra del Controlador y Letra de la seguna Palabra: Controller, service
+        $fin = 'ING'; // Últimas 3 letras del primer nombre del archivo *comPRAcontroller
         $trace = debug_backtrace()[0];
         return ('<br>' . $sis . $ini . $trace['line'] . $fin);
     }

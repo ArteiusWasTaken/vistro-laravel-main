@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::group(['prefix' => 'dev'], function () {
-    Route::get('ka', [PrintController::class, 'keepAlive']);
-
     Route::get('usb/{barcode}', [PrintController::class, 'tickets_usb']);
 });
 
