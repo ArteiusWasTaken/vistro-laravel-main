@@ -1,10 +1,14 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 namespace App\Console\Commands;
 
 use App\Services\KeepAliveService;
+use Exception;
 use Illuminate\Console\Command;
 
+/**
+ *
+ */
 class KeepAliveTask extends Command
 {
     /**
@@ -22,6 +26,12 @@ class KeepAliveTask extends Command
     protected $description = 'Keep Alive para las imrpesoras Zebra';
 
     protected KeepAliveService $keepAliveService;
+
+    /**
+     * Create a new console command instance.
+     *
+     * @return void
+     */
     public function __construct(KeepAliveService $keepAliveService)
     {
         parent::__construct();
@@ -31,13 +41,13 @@ class KeepAliveTask extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         try {
             $resultado = $this->keepAliveService->keepAlive();
 
             $this->info('Resultado: ' . $resultado);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->error('Error ejecutando picking: ' . $e->getMessage());
         }
 

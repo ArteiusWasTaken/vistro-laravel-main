@@ -1,13 +1,21 @@
 <?php
+
 namespace App\Services;
 
+use Exception;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Exception;
+
+/**
+ *
+ */
 class KeepAliveService
 {
+    /**
+     * @return ResponseFactory|Response|Application
+     */
     public function keepAlive(): ResponseFactory|Response|Application
     {
         $ips = DB::table('impresora')
@@ -30,7 +38,7 @@ class KeepAliveService
                 fclose($socket);
 
             } catch (Exception $e) {
-                ErrorLoggerService::log(
+                ErrorLoggerService::logger(
                     'Error en Keep Alive. Impresora: ' . $ip,
                     'PrintController',
                     [
@@ -43,6 +51,9 @@ class KeepAliveService
         return response('Keep Alive enviado Correctamente');
     }
 
+    /**
+     * @return string
+     */
     private static function logLocation(): string
     {
         $sis = 'BE'; // Front o Back

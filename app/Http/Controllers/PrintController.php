@@ -58,7 +58,7 @@ class PrintController extends Controller
                 fclose($socket);
 
             } catch (Exception $e) {
-                ErrorLoggerService::log(
+                ErrorLoggerService::logger(
                     'Error en etiquetas. Impresora: ' . $ip,
                     'PrintController',
                     [
@@ -197,7 +197,7 @@ class PrintController extends Controller
      * @return JsonResponse
      * @noinspection PhpUnused
      */
-    public function tickets_usb($barcode): JsonResponse
+    public function ticketsUsb($barcode): JsonResponse
     {
         try {
             // 1. Configurar conector - elige una opción:
@@ -374,7 +374,7 @@ class PrintController extends Controller
                 fclose($socket);
 
             } catch (Exception $e) {
-                ErrorLoggerService::log(
+                ErrorLoggerService::logger(
                     'Error en etiquetas. Impresora: ' . $impresora->ip,
                     'PrintController',
                     ['exception' => $e->getMessage(), 'line' => self::logLocation()]

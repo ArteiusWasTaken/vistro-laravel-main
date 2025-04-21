@@ -3,14 +3,24 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Http\JsonResponse;
+use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
-use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
+/**
+ *
+ */
 class JwtMiddleware
 {
-    public function handle($request, Closure $next)
+    /**
+     * @param $request
+     * @param Closure $next
+     * @return JsonResponse|mixed
+     * @noinspection PhpUndefinedMethodInspection
+     */
+    public function handle($request, Closure $next): mixed
     {
         try {
             $payload = JWTAuth::parseToken()->getPayload();
