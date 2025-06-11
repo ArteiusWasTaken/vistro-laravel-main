@@ -23,6 +23,11 @@ class JwtMiddleware
     public function handle($request, Closure $next): mixed
     {
         try {
+            if (!$request->bearerToken() && $request->cookie('token')) {
+                $token = $request->cookie('token');
+                $request->headers->set('Authorization', 'Bearer ' . $token);
+            }
+
             $payload = JWTAuth::parseToken()->getPayload();
             $request->auth = $payload->get('sub');
         } catch (TokenExpiredException $e) {
@@ -35,4 +40,5 @@ class JwtMiddleware
 
         return $next($request);
     }
+
 }
