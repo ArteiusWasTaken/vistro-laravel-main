@@ -56,7 +56,7 @@ class AuthController extends Controller
                 'Strict'
             );
 
-            return response()->json(['message' => 'Login exitoso'], 200)->withCookie($cookie);
+            return response()->json(['message' => 'Login exitoso'])->withCookie($cookie);
         } catch (\Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

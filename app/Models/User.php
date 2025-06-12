@@ -20,4 +20,20 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+    public function niveles()
+    {
+        return $this->belongsToMany(Nivel::class, 'user_nivel');
+    }
+
+    public function permisos()
+    {
+        return $this->niveles()->with('permisos')->get()
+            ->pluck('permisos')->flatten()->unique('id');
+    }
+
+    public function hasPermiso($clave)
+    {
+        return $this->permisos()->contains('clave', $clave);
+    }
 }
